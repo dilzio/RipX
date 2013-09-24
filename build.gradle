@@ -3,7 +3,10 @@ apply plugin:'groovy'
 repositories { mavenCentral() }
  
 dependencies {
-    groovy 'org.codehaus.groovy:groovy-all:1.8.2'
+	compile group: 'com.lmax', name: 'disruptor', version: '3.2.0'
+	compile group: 'org.apache.httpcomponents', name: 'httpcore', version: '4.3'
+	compile group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.0-beta9'
+	compile group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.0-beta9'
 }
  
 task makeDirs(description:'make all dirs for project setup') << {
