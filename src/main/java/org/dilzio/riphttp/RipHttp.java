@@ -26,14 +26,14 @@ public class RipHttp {
 
 	public RipHttp(){
 		//// TODO - PASS IN ////
-		int numWorkers = 1;
+		int numWorkers = 10;
 		int port = 8081;
 		int bufferSize = 1024 * 8;
 		//////////////////////////
-		_threadPool = Executors.newCachedThreadPool();
+		_threadPool = Executors.newFixedThreadPool(numWorkers + 1);
 		_httpWorkers = new HttpWorker[numWorkers];
 		for (int i = 0; i < numWorkers; i++){
-			_httpWorkers[i] = new HttpWorker();
+			_httpWorkers[i] = new HttpWorker("Worker-" + i);
 		}
 		
 		_ringBuffer = RingBuffer.createSingleProducer(HttpConnectionEvent.EVENT_FACTORY, bufferSize, new YieldingWaitStrategy());
@@ -52,6 +52,7 @@ public class RipHttp {
 			LOG.fatal("Unable to start server. Exiting.");
 			System.exit(-1);
 		}
+		LOG.fatal("Exiting.");
 	}
 
 	public void stop(){
