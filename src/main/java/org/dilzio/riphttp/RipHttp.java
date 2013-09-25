@@ -44,6 +44,7 @@ public class RipHttp {
 	}
 	
 	public void start(){
+		LOG.info("Starting riphttp");
 		_workerPool.start(_threadPool);
 		_threadPool.submit(_listenerThread);
 		try {

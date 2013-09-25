@@ -26,6 +26,7 @@ public class ListenerDaemon implements Runnable {
 
 	@Override
 	public void run() {
+		LOG.info("Listening for incoming connections on port %s", _port);
 		ServerSocket listenerSocket = null;
 		try {
 			listenerSocket = new ServerSocket(_port);

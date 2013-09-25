@@ -31,7 +31,7 @@ public class HttpWorker implements WorkHandler<HttpConnectionEvent>, EventReleas
 			throw new RuntimeException("Null http connection on event.");
 		}
 		try{
-			LOG.error("%s connection is open: %s Event %s", _name, httpCon.isOpen(), event.getId());
+			LOG.info("%s connection is open: %s Event %s", _name, httpCon.isOpen(), event.getId());
 		}
 		finally{
 			httpCon.shutdown();

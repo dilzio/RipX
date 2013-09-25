@@ -6,3 +6,8 @@
 *.ear
 /build
 /bin
+/eclipsebin
+.classpath
+.project
+.gradle
+.settings
