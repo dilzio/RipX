@@ -1,7 +1,9 @@
 package org.dilzio.riphttp;
 
 import java.io.IOException;
+import java.net.SocketException;
 
+import org.apache.http.ConnectionClosedException;
 import org.apache.http.HttpException;
 import org.apache.http.HttpRequest;
 import org.apache.http.HttpResponse;
@@ -46,10 +48,18 @@ public class HttpWorker implements WorkHandler<HttpConnectionEvent>, EventReleas
 			public void handle(HttpRequest request, HttpResponse response,
 					HttpContext context) throws HttpException, IOException {
 				response.setStatusCode(HttpStatus.SC_OK);
-				response.setEntity(new StringEntity("200 OK"));
+				response.setEntity(new StringEntity("RH1"));
 			}
 		});
-		
+		registry.register("/foo*", new HttpRequestHandler(){
+
+			@Override
+			public void handle(HttpRequest request, HttpResponse response,
+					HttpContext context) throws HttpException, IOException {
+				response.setStatusCode(HttpStatus.SC_OK);
+				response.setEntity(new StringEntity("RH2"));
+			}
+		});
 		_httpService = new HttpService(_httpProc, registry);
 	}
 	@Override
@@ -68,11 +78,19 @@ public class HttpWorker implements WorkHandler<HttpConnectionEvent>, EventReleas
 			throw new RuntimeException("Null http connection on event.");
 		}
 		try{
-			_httpService.handleRequest(httpCon, new BasicHttpContext(null));
+			//while (httpCon.isOpen()){
+			    LOG.info("Handler %s received event: %s", _name, event.getId());
+				_httpService.handleRequest(httpCon, new BasicHttpContext(null));
+			//}
 			LOG.info("Handler %s sucessfully processed event: %s", _name, event.getId());
-		}
-		finally{
-			//httpCon.shutdown();
+		} catch (ConnectionClosedException ce){
+			LOG.warn("ConnectionClosed Exception event %s", event.getId());
+		} catch (SocketException se){
+			LOG.warn("Socket Exception event %s", event.getId());
+		}finally{
+			try{
+				httpCon.shutdown();
+			}catch(IOException ignore) {}
 		}
 	}
 
