@@ -14,7 +14,7 @@ public class URIRegistryFactory {
 		registry.register("/foo/*/bar", new BasicOkResponseHttpRequestHandler("/foo/*/bar"));
 		registry.register("/", new BasicOkResponseHttpRequestHandler("ROOT"));
 		registry.register("*", new ForbiddenResponseHttpRequestHandler("FORBIDDEN"));
-		registry.register("/red", new RedirectResponseHttpRequestHandler("www.metallica.com"));
+		registry.register("/red", new RedirectResponseHttpRequestHandler("http://www.facebook.com"));
 		return registry;
 	}
 }
