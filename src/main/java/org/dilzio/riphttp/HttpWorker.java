@@ -35,38 +35,16 @@ public class HttpWorker implements WorkHandler<HttpConnectionEvent>, EventReleas
 	private final HttpProcessor _httpProc;
 	private final HttpService _httpService;
 	
-	public HttpWorker(final String name){
+	public HttpWorker(final String name, final UriHttpRequestHandlerMapper registry){
 		_name = name;
 		_httpProc = HttpProcessorBuilder.create().add(new ResponseDate())
 												 .add(new ResponseServer("Test/1.1"))
 												 .add(new ResponseContent())
 												 .add(new ResponseConnControl()).build();
-		UriHttpRequestHandlerMapper registry = new UriHttpRequestHandlerMapper();
-		registry.register("*", new HttpRequestHandler(){
-
-			@Override
-			public void handle(HttpRequest request, HttpResponse response,
-					HttpContext context) throws HttpException, IOException {
-				response.setStatusCode(HttpStatus.SC_OK);
-				response.setEntity(new StringEntity("RH1"));
-			}
-		});
-		registry.register("/foo*", new HttpRequestHandler(){
-
-			@Override
-			public void handle(HttpRequest request, HttpResponse response,
-					HttpContext context) throws HttpException, IOException {
-				response.setStatusCode(HttpStatus.SC_OK);
-				response.setEntity(new StringEntity("RH2"));
-			}
-		});
 		_httpService = new HttpService(_httpProc, registry);
 	}
 	@Override
-	public void setEventReleaser(EventReleaser eventReleaser) {
-		// TODO Auto-generated method stub
-
-	}
+	public void setEventReleaser(EventReleaser eventReleaser) {}
 
 	@Override
 	public void onEvent(final HttpConnectionEvent event) throws Exception {
@@ -78,11 +56,9 @@ public class HttpWorker implements WorkHandler<HttpConnectionEvent>, EventReleas
 			throw new RuntimeException("Null http connection on event.");
 		}
 		try{
-			//while (httpCon.isOpen()){
-			    LOG.info("Handler %s received event: %s", _name, event.getId());
-				_httpService.handleRequest(httpCon, new BasicHttpContext(null));
-			//}
-			LOG.info("Handler %s sucessfully processed event: %s", _name, event.getId());
+			  LOG.info("Handler %s received event: %s", _name, event.getId());
+			  _httpService.handleRequest(httpCon, new BasicHttpContext(null));
+			  LOG.info("Handler %s sucessfully processed event: %s", _name, event.getId());
 		} catch (ConnectionClosedException ce){
 			LOG.warn("ConnectionClosed Exception event %s", event.getId());
 		} catch (SocketException se){

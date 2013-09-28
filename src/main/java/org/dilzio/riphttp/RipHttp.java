@@ -5,6 +5,7 @@ import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import org.apache.http.protocol.UriHttpRequestHandlerMapper;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -32,8 +33,9 @@ public class RipHttp {
 		//////////////////////////
 		_threadPool = Executors.newFixedThreadPool(numWorkers + 1);
 		_httpWorkers = new HttpWorker[numWorkers];
+		UriHttpRequestHandlerMapper uriHandlerMap = new URIRegistryFactory().getURIRegistry();
 		for (int i = 0; i < numWorkers; i++){
-			_httpWorkers[i] = new HttpWorker("Worker-" + i);
+			_httpWorkers[i] = new HttpWorker("Worker-" + i, uriHandlerMap);
 		}
 		
 		_ringBuffer = RingBuffer.createSingleProducer(HttpConnectionEvent.EVENT_FACTORY, bufferSize, new YieldingWaitStrategy());
