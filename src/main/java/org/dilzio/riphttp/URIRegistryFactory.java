@@ -15,6 +15,7 @@ public class URIRegistryFactory {
 		registry.register("/", new BasicOkResponseHttpRequestHandler("ROOT"));
 		registry.register("*", new ForbiddenResponseHttpRequestHandler("FORBIDDEN"));
 		registry.register("/red", new RedirectResponseHttpRequestHandler("http://www.facebook.com"));
+		registry.register("/cookie", new WriteACookieResponseHttpRequestHandler());
 		return registry;
 	}
 }
