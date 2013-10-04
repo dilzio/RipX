@@ -3,8 +3,6 @@ package org.dilzio.riphttp;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.concurrent.BrokenBarrierException;
-import java.util.concurrent.CyclicBarrier;
 
 import org.apache.http.HttpConnectionFactory;
 import org.apache.http.HttpServerConnection;

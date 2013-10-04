@@ -2,10 +2,8 @@ package org.dilzio.riphttp;
 
 import java.io.IOException;
 import java.net.SocketException;
-import java.util.concurrent.BrokenBarrierException;
 import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 import org.apache.http.ConnectionClosedException;
 import org.apache.http.HttpServerConnection;
