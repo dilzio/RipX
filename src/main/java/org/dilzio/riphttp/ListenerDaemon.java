@@ -3,6 +3,8 @@ package org.dilzio.riphttp;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.concurrent.BrokenBarrierException;
+import java.util.concurrent.CyclicBarrier;
 
 import org.apache.http.HttpConnectionFactory;
 import org.apache.http.HttpServerConnection;
@@ -18,7 +20,6 @@ public class ListenerDaemon implements Runnable {
 	private final HttpConnectionFactory<DefaultBHttpServerConnection> _connFactory = DefaultBHttpServerConnectionFactory.INSTANCE;
 	private final int _port;
 	private final RingBuffer<HttpConnectionEvent> _ringBuffer;
-	
 	public ListenerDaemon(final int port, final RingBuffer<HttpConnectionEvent> ringBuffer) {
 		_port = port;
 		_ringBuffer = ringBuffer;

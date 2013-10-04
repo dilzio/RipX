@@ -1,10 +1,7 @@
 package org.dilzio.riphttp;
 
-import java.util.HashMap;
-import java.util.Map;
 
 public class Cookie {
-	private final Map<String, String> _attribMap = new HashMap<String, String>();
 	private final String _name;
 	private final String _value;
 
