@@ -7,6 +7,7 @@ public enum ParamEnum {
 	USE_SSL("false"),
 	SSL_KEYSTORE(null),
 	SSL_KEYSTORE_PASSWORD(null),
+	HANDLER_AWAIT_MLLIS("500"),
 	TEST_FLOAT("1.35");
 	
 	private String _default;
