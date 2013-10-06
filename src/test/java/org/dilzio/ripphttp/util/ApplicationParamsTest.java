@@ -5,6 +5,7 @@ import static org.junit.Assert.*;
 import org.dilzio.riphttp.util.ApplicationParams;
 import org.dilzio.riphttp.util.ParamEnum;
 import org.junit.Test;
+import org.junit.experimental.categories.Categories.ExcludeCategory;
 
 public class ApplicationParamsTest {
 
@@ -44,5 +45,12 @@ public class ApplicationParamsTest {
 		assertEquals(true, params.getBoolParam(ParamEnum.USE_SSL));
 		assertEquals(3.45, params.getFloatParam(ParamEnum.TEST_FLOAT), .0001);
 		assertEquals("secret", params.getStringParam(ParamEnum.SSL_KEYSTORE_PASSWORD));
+	}
+	
+	@Test(expected=NumberFormatException.class)
+	public void tryInvalidNumeric() {
+		ApplicationParams params = new ApplicationParams();
+		params.setParam(ParamEnum.LISTEN_PORT, "abcd");
+		params.getIntParam(ParamEnum.LISTEN_PORT);
 	}
 }
