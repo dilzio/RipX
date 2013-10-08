@@ -1,11 +1,16 @@
 package org.dilzio.riphttp.core;
 
+import java.util.LinkedList;
+import java.util.Queue;
 import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.http.protocol.HttpRequestHandlerMapper;
+import org.apache.http.protocol.UriHttpRequestHandlerMapper;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.dilzio.riphttp.util.ApplicationParams;
@@ -25,45 +30,46 @@ import com.lmax.disruptor.WorkerPool;
 public class RipHttp {
 	
 	private static final Logger LOG = LogManager.getFormatterLogger(RipHttp.class.getName());
-	private final ExecutorService _threadPool;
-	private final ListenerDaemon _listenerThread;
-	private final HttpWorker[] _httpWorkers;
-	private final RingBuffer<HttpConnectionEvent> _ringBuffer;
-	private final WorkerPool<HttpConnectionEvent> _workerPool;
+	private ExecutorService _threadPool;
+	private ListenerDaemon _listenerThread;
+	private HttpWorker[] _httpWorkers;
+	private RingBuffer<HttpConnectionEvent> _ringBuffer;
+	private WorkerPool<HttpConnectionEvent> _workerPool;
 	private final CyclicBarrier _shutdownLatch = new CyclicBarrier(2);
-	private final CyclicBarrier _startUpBarrier;
+	private CyclicBarrier _startUpBarrier;
 	private final ApplicationParams _params;
-	
+	private final Queue<Route> _routeList = new LinkedList<Route>();
+	private final AtomicBoolean _startedFlag = new AtomicBoolean(false);
+
 	/**
 	 * Will initialize with all default parameter values
 	 * @see ParamEnum  
 	 */
-	public RipHttp(HttpRequestHandlerMapper handlerMap){
-		this(new ApplicationParams(), handlerMap);
+	public RipHttp(){
+		this(new ApplicationParams());
 	}
-	public RipHttp(final ApplicationParams appParams, final HttpRequestHandlerMapper handlerMap){
+	public RipHttp(final ApplicationParams appParams){
 		if (null == appParams){
 			throw new IllegalArgumentException("appParams cannot be null");
 		}
-
-		if (null == handlerMap){
-			throw new IllegalArgumentException("handlerMap cannot be null");	
-		}
-		
 		_params = appParams;
-		int numWorkers = appParams.getIntParam(ParamEnum.WORKER_COUNT);
-		int port = appParams.getIntParam(ParamEnum.LISTEN_PORT); 
-		int bufferSize = appParams.getIntParam(ParamEnum.RING_BUFFER_SIZE); 
+	}
+	
+	private void init(){
+		int numWorkers = _params.getIntParam(ParamEnum.WORKER_COUNT);
+		int port = _params.getIntParam(ParamEnum.LISTEN_PORT); 
+		int bufferSize = _params.getIntParam(ParamEnum.RING_BUFFER_SIZE); 
 		
 		int numThreads = numWorkers + 1;
 		_threadPool = Executors.newFixedThreadPool(numThreads, new DaemonThreadFactory());
 		_httpWorkers = new HttpWorker[numWorkers];
 		_startUpBarrier = new CyclicBarrier(numThreads);
 
+		HttpRequestHandlerMapper handlerMap = buildMapper();
 
 		for (int i = 0; i < numWorkers; i++){
-			_httpWorkers[i] = new HttpWorker(appParams.getStringParam(ParamEnum.SERVER_NAME), 
-											 appParams.getStringParam(ParamEnum.SERVER_VERSION), 
+			_httpWorkers[i] = new HttpWorker(_params.getStringParam(ParamEnum.SERVER_NAME), 
+											 _params.getStringParam(ParamEnum.SERVER_VERSION), 
 											 "Worker-" + i, handlerMap, _startUpBarrier);
 		}
 		
@@ -74,9 +80,26 @@ public class RipHttp {
 		_listenerThread = new ListenerDaemon(port, _ringBuffer);
 	}
 	
-
-	public void start(){
+	private HttpRequestHandlerMapper buildMapper() {
+		UriHttpRequestHandlerMapper mapper = new UriHttpRequestHandlerMapper();
+		for (Route r : _routeList){
+			mapper.register(r.getUri(), r.getHandler());
+		}
+		return mapper;
+	}
+	
+	public Future<?> start(){
+	
 		LOG.info("Starting riphttp");
+		if (_routeList.isEmpty()){
+			throw new IllegalStateException("At least one Handler must be configured.");
+		}
+		
+		if (_startedFlag.get()){
+			throw new IllegalStateException("RipHttp server already started.");
+		}
+		
+		init();
 		_workerPool.start(_threadPool);
 		
 		try {
@@ -85,14 +108,7 @@ public class RipHttp {
 			throw new RuntimeException("Timed out waiting for Workers to start.", e);
 		}
 	
-		_threadPool.submit(_listenerThread);
-		try {
-			_shutdownLatch.await();
-		} catch (Exception e) {
-			LOG.fatal("Unable to start server. Exiting.");
-			System.exit(-1);
-		}
-		LOG.fatal("Exiting.");
+		return _threadPool.submit(_listenerThread);
 	}
 
 	public void stop(){
@@ -103,6 +119,18 @@ public class RipHttp {
 		} catch (Exception e) {
 			LOG.error("Unable to shut down server. Exiting.");
 			e.printStackTrace();
+		}
+	}
+	
+	public void addHandlers(Route... routes){
+		if (null == routes || routes.length == 0){
+			throw new IllegalArgumentException("tried to add null or empty routes.");
+		}
+		
+		_routeList.clear();
+
+		for (Route rt : routes){
+			_routeList.add(rt);
 		}
 	}
 }

@@ -1,11 +1,12 @@
 package org.dilzio.riphttp;
 
-import org.apache.http.protocol.UriHttpRequestHandlerMapper;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
+
 import org.dilzio.riphttp.core.RipHttp;
-import org.dilzio.riphttp.handlers.BasicOkResponseHttpRequestHandler;
-import org.dilzio.riphttp.handlers.ForbiddenResponseHttpRequestHandler;
-import org.dilzio.riphttp.handlers.RedirectResponseHttpRequestHandler;
-import org.dilzio.riphttp.handlers.WriteACookieResponseHttpRequestHandler;
+import org.dilzio.riphttp.core.Route;
+import org.dilzio.riphttp.handlers.HttpFileHandler;
+import org.dilzio.riphttp.util.HttpMethod;
 
 /**
  * 
@@ -17,22 +18,26 @@ public class Main {
 	 * @param args arg[0] should be the path to a java properties file where each property is a name value pair.
 	 * These are read into an ApplicationParams class for further processing.  See the ParamEnum class for 
 	 * the list of available options.
+	 * @throws ExecutionException 
+	 * @throws InterruptedException 
 	 * 
 	 */
-	//TODO remove route hardcoding, source properties file correctly
-	public static void main(String[] args) {
-		UriHttpRequestHandlerMapper registry = new UriHttpRequestHandlerMapper();
-		registry.register("/foo", new BasicOkResponseHttpRequestHandler("/foo"));
-		registry.register("/foo/*/bar", new BasicOkResponseHttpRequestHandler("/foo/*/bar"));
-		registry.register("/", new BasicOkResponseHttpRequestHandler("ROOT"));
-		registry.register("*", new ForbiddenResponseHttpRequestHandler("FORBIDDEN"));
-		registry.register("/red", new RedirectResponseHttpRequestHandler("http://www.facebook.com"));
-		registry.register("/cookie", new WriteACookieResponseHttpRequestHandler());
+	//TODO source properties file correctly. take docroot
+	public static void main(String[] args) throws InterruptedException, ExecutionException {
+		final RipHttp server = new RipHttp();
+		
+		//add a default file handler
+		server.addHandlers(new Route(HttpMethod.GET, "*", new HttpFileHandler("C:\\tmp")));
+		Runtime.getRuntime().addShutdownHook(new Thread(){
+			public void run(){
+				server.stop();
+			}
+		});
 		
 		if (args.length == 0){
-			new RipHttp(registry).start();
+			Future<?> shutdownFuture = server.start();
+			shutdownFuture.get();
 		}
-		//TODO: source properties file
 	}
 
 }
