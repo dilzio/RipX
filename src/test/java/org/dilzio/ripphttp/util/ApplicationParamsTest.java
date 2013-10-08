@@ -1,11 +1,11 @@
 package org.dilzio.ripphttp.util;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 import org.dilzio.riphttp.util.ApplicationParams;
 import org.dilzio.riphttp.util.ParamEnum;
 import org.junit.Test;
-import org.junit.experimental.categories.Categories.ExcludeCategory;
 
 public class ApplicationParamsTest {
 

@@ -24,13 +24,19 @@ public class Main {
 	 */
 	//TODO source properties file correctly. take docroot
 	public static void main(String[] args) throws InterruptedException, ExecutionException {
+		String docroot = System.getProperty("DOCROOT");
+		
+		if (null == docroot){
+			System.out.println("DOCROOT System Property Must be set. Exiting");
+			System.exit(0);
+		}
 		final RipHttp server = new RipHttp();
 		
 		//add a default file handler
-		server.addHandlers(new Route(HttpMethod.GET, "*", new HttpFileHandler("C:\\tmp")));
+		server.addHandlers(new Route(HttpMethod.GET, "*", new HttpFileHandler(docroot)));
 		Runtime.getRuntime().addShutdownHook(new Thread(){
 			public void run(){
-				server.stop();
+				//server.stop();
 			}
 		});
 		
