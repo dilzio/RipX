@@ -19,8 +19,14 @@ public class WriteACookieResponseHttpRequestHandler implements HttpRequestHandle
 	@Override
 	public void handle(HttpRequest request, HttpResponse response, HttpContext context) throws HttpException, IOException {
 		Map<String, Cookie> cookies = _cookieUtil.getCookiesFromRequest(request);
-		response.addHeader(_cookieUtil.getCookieHeader("mynewcook", "secretcodeval" + COUNTER.getAndIncrement(),null, "nil", 
+		response.addHeader(_cookieUtil.getCookieHeader("mynewcook", "secretcodeval " + COUNTER.getAndIncrement(),null, "nil", 
 						  false, false));
+		
+		if (null == cookies){
+			response.setEntity(new StringEntity("no cookies found"));
+			return;
+		}
+		
 		for (String key : cookies.keySet()){
 			Cookie cookie = cookies.get(key);
 			response.setEntity(new StringEntity(String.format("Got cookie name: %s value: %s", cookie.getName(), cookie.getValue())));

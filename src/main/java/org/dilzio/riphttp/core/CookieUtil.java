@@ -52,6 +52,6 @@ public class CookieUtil {
 		if (secure){
 			bldr.append("Secure;");
 		}
-		return new BasicHeader("Set-Cookie" ,bldr.toString());
+		return new BasicHeader("Set-Cookie", bldr.toString());
 	}
 }

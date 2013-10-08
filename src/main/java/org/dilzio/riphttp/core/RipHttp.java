@@ -5,7 +5,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.http.protocol.UriHttpRequestHandlerMapper;
+import org.apache.http.protocol.HttpRequestHandlerMapper;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.dilzio.riphttp.util.ApplicationParams;
@@ -38,24 +38,33 @@ public class RipHttp {
 	 * Will initialize with all default parameter values
 	 * @see ParamEnum  
 	 */
-	public RipHttp(){
-		this(new ApplicationParams());
+	public RipHttp(HttpRequestHandlerMapper handlerMap){
+		this(new ApplicationParams(), handlerMap);
 	}
-	public RipHttp(ApplicationParams params){
-		_params = params;
-		int numWorkers = params.getIntParam(ParamEnum.WORKER_COUNT);
-		int port = params.getIntParam(ParamEnum.LISTEN_PORT); 
-		int bufferSize = params.getIntParam(ParamEnum.RING_BUFFER_SIZE); 
+	public RipHttp(final ApplicationParams appParams, final HttpRequestHandlerMapper handlerMap){
+		if (null == appParams){
+			throw new IllegalArgumentException("appParams cannot be null");
+		}
+
+		if (null == handlerMap){
+			throw new IllegalArgumentException("handlerMap cannot be null");	
+		}
+		
+		_params = appParams;
+		int numWorkers = appParams.getIntParam(ParamEnum.WORKER_COUNT);
+		int port = appParams.getIntParam(ParamEnum.LISTEN_PORT); 
+		int bufferSize = appParams.getIntParam(ParamEnum.RING_BUFFER_SIZE); 
 		
 		int numThreads = numWorkers + 1;
 		_threadPool = Executors.newFixedThreadPool(numThreads, new DaemonThreadFactory());
 		_httpWorkers = new HttpWorker[numWorkers];
 		_startUpBarrier = new CyclicBarrier(numThreads);
 
-		UriHttpRequestHandlerMapper uriHandlerMap = new URIRegistryFactory().getURIRegistry();
 
 		for (int i = 0; i < numWorkers; i++){
-			_httpWorkers[i] = new HttpWorker("Worker-" + i, uriHandlerMap, _startUpBarrier);
+			_httpWorkers[i] = new HttpWorker(appParams.getStringParam(ParamEnum.SERVER_NAME), 
+											 appParams.getStringParam(ParamEnum.SERVER_VERSION), 
+											 "Worker-" + i, handlerMap, _startUpBarrier);
 		}
 		
 		_ringBuffer = RingBuffer.createSingleProducer(HttpConnectionEvent.EVENT_FACTORY, bufferSize, new BlockingWaitStrategy());

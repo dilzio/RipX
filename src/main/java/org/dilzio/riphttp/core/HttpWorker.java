@@ -10,12 +10,12 @@ import org.apache.http.HttpServerConnection;
 import org.apache.http.protocol.BasicHttpContext;
 import org.apache.http.protocol.HttpProcessor;
 import org.apache.http.protocol.HttpProcessorBuilder;
+import org.apache.http.protocol.HttpRequestHandlerMapper;
 import org.apache.http.protocol.HttpService;
 import org.apache.http.protocol.ResponseConnControl;
 import org.apache.http.protocol.ResponseContent;
 import org.apache.http.protocol.ResponseDate;
 import org.apache.http.protocol.ResponseServer;
-import org.apache.http.protocol.UriHttpRequestHandlerMapper;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -32,10 +32,10 @@ public class HttpWorker implements WorkHandler<HttpConnectionEvent>, LifecycleAw
 	private final HttpService _httpService;
 	private final CyclicBarrier _startUpBarrier;
 	
-	public HttpWorker(final String name, final UriHttpRequestHandlerMapper registry, CyclicBarrier startUpBarrier){
+	public HttpWorker(final String serverName, final String serverVsn, final String name, final HttpRequestHandlerMapper registry, CyclicBarrier startUpBarrier){
 		_name = name;
 		_httpProc = HttpProcessorBuilder.create().add(new ResponseDate())
-												 .add(new ResponseServer("Test/1.1"))
+												 .add(new ResponseServer(serverName + "/" + serverVsn))
 												 .add(new ResponseContent())
 												 .add(new ResponseConnControl()).build();
 		_httpService = new HttpService(_httpProc, registry);

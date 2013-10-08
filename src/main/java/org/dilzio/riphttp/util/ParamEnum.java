@@ -8,7 +8,9 @@ public enum ParamEnum {
 	SSL_KEYSTORE(null),
 	SSL_KEYSTORE_PASSWORD(null),
 	HANDLER_AWAIT_MLLIS("500"),
-	TEST_FLOAT("1.35");
+	TEST_FLOAT("1.35"), 
+	SERVER_NAME("RipHTTP"), 
+	SERVER_VERSION("1.0");
 	
 	private String _default;
 	
