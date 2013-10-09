@@ -28,22 +28,22 @@ public class HttpWorker implements WorkHandler<HttpConnectionEvent>, LifecycleAw
 
 	private static final Logger LOG = LogManager.getFormatterLogger(HttpWorker.class.getName());
 	private final String _name;
-	private final HttpProcessor _httpProc;
 	private final HttpService _httpService;
 	private final CyclicBarrier _startUpBarrier;
 	
-	public HttpWorker(final String serverName, final String serverVsn, final String name, final HttpRequestHandlerMapper registry, CyclicBarrier startUpBarrier){
+	public HttpWorker(final String serverName, final String serverVsn, final String name, final HttpRequestHandlerMapper registry, final CyclicBarrier startUpBarrier){
 		_name = name;
-		_httpProc = HttpProcessorBuilder.create().add(new ResponseDate())
+		HttpProcessor httpProc = HttpProcessorBuilder.create().add(new ResponseDate())
 												 .add(new ResponseServer(serverName + "/" + serverVsn))
 												 .add(new ResponseContent())
 												 .add(new ResponseConnControl()).build();
-		_httpService = new HttpService(_httpProc, registry);
+		_httpService = new HttpService(httpProc, registry);
 		_startUpBarrier = startUpBarrier;
 			
 	}
+	
 	@Override
-	public void setEventReleaser(EventReleaser eventReleaser) {}
+	public void setEventReleaser(EventReleaser eventReleaser) {/*TODO*/}
 
 	@Override
 	public void onEvent(final HttpConnectionEvent event) throws Exception {
@@ -64,7 +64,9 @@ public class HttpWorker implements WorkHandler<HttpConnectionEvent>, LifecycleAw
 		}finally{
 			try{
 				httpCon.shutdown();
-			}catch(IOException ignore) {}
+			}catch(IOException ignore) {
+				LOG.warn("threw IOException when attempting to shutdown httpcCon: %s", ignore.getMessage());
+			}
 		}
 	}
 	@Override

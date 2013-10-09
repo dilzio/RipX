@@ -17,7 +17,7 @@ public class BasicOkResponseHttpRequestHandler implements HttpRequestHandler {
 	} 
 
 	@Override
-	public void handle(HttpRequest request, HttpResponse response, HttpContext context) throws HttpException, IOException {
+	public void handle(final HttpRequest request, final HttpResponse response, final HttpContext context) throws HttpException, IOException {
 			//response.setStatusCode(HttpStatus.SC_OK);
 			response.setEntity(new StringEntity(_message));
 	}

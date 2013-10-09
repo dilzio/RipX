@@ -10,7 +10,7 @@ public class DaemonThreadFactory implements ThreadFactory {
 		Thread t = Executors.defaultThreadFactory().newThread(r); 
 		t.setDaemon(true);
 		t.setName("thread-" + _instanceCounter);
-		_instanceCounter = _instanceCounter += 1;
+		_instanceCounter += 1;
 		return t;
 	}
 }

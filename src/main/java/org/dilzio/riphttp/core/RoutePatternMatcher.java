@@ -3,15 +3,12 @@ package org.dilzio.riphttp.core;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.http.HttpRequest;
 import org.apache.http.protocol.HttpRequestHandler;
 import org.dilzio.riphttp.util.HttpMethod;
 
-import com.sun.net.httpserver.HttpHandler;
-
 public class RoutePatternMatcher {
 
-	private Map<String, Map<HttpMethod, HttpRequestHandler>> _routeMap = new HashMap<String, Map<HttpMethod, HttpRequestHandler>>();
+	private final Map<String, Map<HttpMethod, HttpRequestHandler>> _routeMap = new HashMap<String, Map<HttpMethod, HttpRequestHandler>>();
 
 	public void register(final Route route) {
 		HashMap<HttpMethod, HttpRequestHandler> mapForRoute = new HashMap<HttpMethod, HttpRequestHandler>();
@@ -26,7 +23,7 @@ public class RoutePatternMatcher {
 
 	/**
 	 * Find a configured handler for a given request URI and HTTP Method.
-	 * First attempts to do a direct lookup with the given URI.  IF that fails, will look for a
+	 * First attempts to do a direct lookup with the given URI.  If that fails, it will look for a
 	 * route with a suitable wildcarded URI pattern configured.   If no route is identified then a null is returned.
 	 * 
 	 * If a route is found, an additional filter is applied to see whether the request's HTTPMethod is configured for the route
@@ -42,18 +39,16 @@ public class RoutePatternMatcher {
 		if (null != methodToHandlerMap) {
 			return methodToHandlerMap.get(method);
 		} else {
-			// pattern match?
 			String bestMatch = null;
 			for (final String pattern : _routeMap.keySet()) {
-				if (matchUriRequestPattern(pattern, requestUri)) {
-					// we have a match. is it any better?
-					if (bestMatch == null
-							|| (bestMatch.length() < pattern.length())
-							|| (bestMatch.length() == pattern.length() && pattern
-									.endsWith("*"))) {
-						methodToHandlerMap = _routeMap.get(pattern);
-						bestMatch = pattern;
-					}
+				if (matchUriRequestPattern(pattern, requestUri) 
+					 && bestMatch == null
+					     || bestMatch.length() < pattern.length()
+					     || bestMatch.length() == pattern.length() && pattern.endsWith("*")
+					    ) 
+				{
+					methodToHandlerMap = _routeMap.get(pattern);
+					bestMatch = pattern;
 				}
 			}
 
@@ -70,15 +65,12 @@ public class RoutePatternMatcher {
 		}
 	}
 
-	private boolean matchUriRequestPattern(final String pattern,
-			final String requestUri) {
-		if (pattern.equals("*")) {
+	private boolean matchUriRequestPattern(final String pattern, final String requestUri) {
+		if ("*".equals(pattern)) {
 			return true;
 		} else {
-			return (pattern.endsWith("*") && requestUri.startsWith(pattern
-					.substring(0, pattern.length() - 1)))
-					|| (pattern.startsWith("*") && requestUri.endsWith(pattern
-							.substring(1, pattern.length())));
+			return  pattern.endsWith("*") && requestUri.startsWith(pattern.substring(0, pattern.length() - 1))
+					|| pattern.startsWith("*") && requestUri.endsWith(pattern.substring(1, pattern.length()));
 		}
 	}
 }

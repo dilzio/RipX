@@ -10,7 +10,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.http.protocol.HttpRequestHandlerMapper;
-import org.apache.http.protocol.UriHttpRequestHandlerMapper;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.dilzio.riphttp.util.ApplicationParams;
@@ -32,8 +31,6 @@ public class RipHttp {
 	private static final Logger LOG = LogManager.getFormatterLogger(RipHttp.class.getName());
 	private ExecutorService _threadPool;
 	private ListenerDaemon _listenerThread;
-	private HttpWorker[] _httpWorkers;
-	private RingBuffer<HttpConnectionEvent> _ringBuffer;
 	private WorkerPool<HttpConnectionEvent> _workerPool;
 	private final CyclicBarrier _shutdownLatch = new CyclicBarrier(2);
 	private CyclicBarrier _startUpBarrier;
@@ -61,23 +58,23 @@ public class RipHttp {
 		int bufferSize = _params.getIntParam(ParamEnum.RING_BUFFER_SIZE); 
 		
 		int numThreads = numWorkers + 1;
+		HttpWorker[] httpWorkers = new HttpWorker[numWorkers];
 		_threadPool = Executors.newFixedThreadPool(numThreads, new DaemonThreadFactory());
-		_httpWorkers = new HttpWorker[numWorkers];
 		_startUpBarrier = new CyclicBarrier(numThreads);
 
 
 		for (int i = 0; i < numWorkers; i++){
      		HttpRequestHandlerMapper handlerMap = buildMapper(); //each worker gets its own thread-local mapper
-			_httpWorkers[i] = new HttpWorker(_params.getStringParam(ParamEnum.SERVER_NAME), 
+			httpWorkers[i] = new HttpWorker(_params.getStringParam(ParamEnum.SERVER_NAME), 
 											 _params.getStringParam(ParamEnum.SERVER_VERSION), 
 											 "Worker-" + i, handlerMap, _startUpBarrier);
 		}
 		
-		_ringBuffer = RingBuffer.createSingleProducer(HttpConnectionEvent.EVENT_FACTORY, bufferSize, new BlockingWaitStrategy());
-		_workerPool = new WorkerPool<HttpConnectionEvent>(_ringBuffer, _ringBuffer.newBarrier(), new FatalExceptionHandler(), _httpWorkers);
-		_ringBuffer.addGatingSequences(_workerPool.getWorkerSequences());
+		RingBuffer<HttpConnectionEvent> ringBuffer = RingBuffer.createSingleProducer(HttpConnectionEvent.EVENT_FACTORY, bufferSize, new BlockingWaitStrategy());
+		_workerPool = new WorkerPool<HttpConnectionEvent>(ringBuffer, ringBuffer.newBarrier(), new FatalExceptionHandler(), httpWorkers);
+		ringBuffer.addGatingSequences(_workerPool.getWorkerSequences());
 		
-		_listenerThread = new ListenerDaemon(port, _ringBuffer);
+		_listenerThread = new ListenerDaemon(port, ringBuffer);
 	}
 	
 	private HttpRequestHandlerMapper buildMapper() {
@@ -123,7 +120,7 @@ public class RipHttp {
 		}
 	}
 	
-	public void addHandlers(Route... routes){
+	public void addHandlers(final Route... routes){
 		if (null == routes || routes.length == 0){
 			throw new IllegalArgumentException("tried to add null or empty routes.");
 		}

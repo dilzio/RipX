@@ -4,7 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class ApplicationParams {
-	private Map<ParamEnum, String> _paramMap = new HashMap<ParamEnum, String>();
+	private final Map<ParamEnum, String> _paramMap = new HashMap<ParamEnum, String>();
 
 	public int getIntParam(ParamEnum paramName) {
 		if (_paramMap.containsKey(paramName)){
