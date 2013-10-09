@@ -65,9 +65,9 @@ public class RipHttp {
 		_httpWorkers = new HttpWorker[numWorkers];
 		_startUpBarrier = new CyclicBarrier(numThreads);
 
-		HttpRequestHandlerMapper handlerMap = buildMapper();
 
 		for (int i = 0; i < numWorkers; i++){
+     		HttpRequestHandlerMapper handlerMap = buildMapper(); //each worker gets its own thread-local mapper
 			_httpWorkers[i] = new HttpWorker(_params.getStringParam(ParamEnum.SERVER_NAME), 
 											 _params.getStringParam(ParamEnum.SERVER_VERSION), 
 											 "Worker-" + i, handlerMap, _startUpBarrier);
@@ -81,10 +81,11 @@ public class RipHttp {
 	}
 	
 	private HttpRequestHandlerMapper buildMapper() {
-		UriHttpRequestHandlerMapper mapper = new UriHttpRequestHandlerMapper();
+		RouteHttpRequestHandlerMapper mapper = new RouteHttpRequestHandlerMapper(new RoutePatternMatcher());
 		for (Route r : _routeList){
-			mapper.register(r.getUri(), r.getHandler());
+			mapper.register(r);
 		}
+		
 		return mapper;
 	}
 	
