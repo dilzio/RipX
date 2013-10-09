@@ -5,18 +5,18 @@ import org.dilzio.riphttp.util.HttpMethod;
 
 public class Route {
 
-	private final HttpMethod _method;
+	private final HttpMethod[] _supportedMethods;
 	private final String _uri;
 	private final HttpRequestHandler _handler;
 
-	public Route(HttpMethod method, String uri, HttpRequestHandler handler) {
-		_method = method;
+	public Route(String uri, HttpRequestHandler handler, HttpMethod ... supportedMethods) {
+		_supportedMethods = supportedMethods;
 		_uri = uri;
 		_handler = handler;
 	}
 	
-	public HttpMethod getMethod(){
-		return _method;
+	public HttpMethod[] getSupportedMethods(){
+		return _supportedMethods;
 	}
 
 	public String getUri(){

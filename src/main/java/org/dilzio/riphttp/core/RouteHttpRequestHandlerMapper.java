@@ -17,7 +17,7 @@ public class RouteHttpRequestHandlerMapper implements HttpRequestHandlerMapper {
 
 	@Override
 	public HttpRequestHandler lookup(HttpRequest request) {
-	     return _routeMatcher.lookup(getRequestMethod(request), getRequestPath(request));
+	     return _routeMatcher.lookup(getRequestPath(request), getRequestMethod(request));
 	}
 
 	private HttpMethod getRequestMethod(HttpRequest request) {
@@ -38,9 +38,9 @@ public class RouteHttpRequestHandlerMapper implements HttpRequestHandlerMapper {
         }
         return uriPath;
 	}
+	
 	public void register(Route r) {
-		// TODO Auto-generated method stub
-		
+		_routeMatcher.register(r);
 	}
 
 }

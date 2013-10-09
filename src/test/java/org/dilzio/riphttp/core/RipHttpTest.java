@@ -10,7 +10,7 @@ public class RipHttpTest {
 	public void test() {
 		RipHttp underTest = new RipHttp();
 
-		underTest.addHandlers(new Route(HttpMethod.GET, "*", new BasicOkResponseHttpRequestHandler("testio")));
+		underTest.addHandlers(new Route("*", new BasicOkResponseHttpRequestHandler("testio"), HttpMethod.GET));
 	}
 
 }

@@ -27,7 +27,7 @@ public class Main {
 		final RipHttp server = new RipHttp();
 		
 		//add a default file handler
-		server.addHandlers(new Route(HttpMethod.GET, "*", new HttpFileHandler("C:\\tmp")));
+		server.addHandlers(new Route("*", new HttpFileHandler("C:\\tmp"), HttpMethod.GET));
 		Runtime.getRuntime().addShutdownHook(new Thread(){
 			public void run(){
 				server.stop();
