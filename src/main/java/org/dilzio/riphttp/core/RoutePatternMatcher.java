@@ -42,10 +42,12 @@ public class RoutePatternMatcher {
 			String bestMatch = null;
 			for (final String pattern : _routeMap.keySet()) {
 				if (matchUriRequestPattern(pattern, requestUri) 
-					 && bestMatch == null
-					     || bestMatch.length() < pattern.length()
-					     || bestMatch.length() == pattern.length() && pattern.endsWith("*")
-					    ) 
+					 && (
+							 bestMatch == null
+							 || bestMatch.length() < pattern.length()
+							 || bestMatch.length() == pattern.length() && pattern.endsWith("*")
+					    )
+				    ) 
 				{
 					methodToHandlerMap = _routeMap.get(pattern);
 					bestMatch = pattern;
