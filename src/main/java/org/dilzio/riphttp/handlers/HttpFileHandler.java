@@ -29,10 +29,7 @@ public class HttpFileHandler implements HttpRequestHandler {
             this.docRoot = docRoot;
         }
 
-        public void handle(
-                final HttpRequest request,
-                final HttpResponse response,
-                final HttpContext context) throws HttpException, IOException {
+        public void handle(final HttpRequest request, final HttpResponse response, final HttpContext context) throws HttpException, IOException {
 
             String method = request.getRequestLine().getMethod().toUpperCase(Locale.ENGLISH);
             if (!method.equals("GET") && !method.equals("HEAD") && !method.equals("POST")) {
