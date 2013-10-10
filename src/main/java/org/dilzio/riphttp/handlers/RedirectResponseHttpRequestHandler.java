@@ -12,19 +12,19 @@ import org.apache.http.protocol.HttpRequestHandler;
 
 public class RedirectResponseHttpRequestHandler implements HttpRequestHandler {
 	private final String _location;
-	
-	public RedirectResponseHttpRequestHandler(final String location){
-		if (null == location){
+
+	public RedirectResponseHttpRequestHandler(final String location) {
+		if (null == location) {
 			throw new IllegalArgumentException("Must Provide Location");
 		}
 		_location = location;
-	} 
+	}
 
 	@Override
 	public void handle(HttpRequest request, HttpResponse response, HttpContext context) throws HttpException, IOException {
-			response.setStatusCode(HttpStatus.SC_MOVED_PERMANENTLY);
-			//response.addHeader(new BasicHeader("Location", _location));
-			response.addHeader(new BasicHeader("Refresh","0; url=" + _location));
+		response.setStatusCode(HttpStatus.SC_MOVED_PERMANENTLY);
+		// response.addHeader(new BasicHeader("Location", _location));
+		response.addHeader(new BasicHeader("Refresh", "0; url=" + _location));
 	}
 
 }

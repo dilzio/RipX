@@ -50,7 +50,15 @@ public class RoutePatternMatcher {
 				return null;
 			}
 
-			if (!methodToHandlerMap.keySet().contains(method)) { // matching route found, but request method not configured for route
+			if (!methodToHandlerMap.keySet().contains(method)) { // matching
+																	// route
+																	// found,
+																	// but
+																	// request
+																	// method
+																	// not
+																	// configured
+																	// for route
 				return null;
 			}
 

@@ -9,21 +9,21 @@ public class Route {
 	private final String _uri;
 	private final HttpRequestHandler _handler;
 
-	public Route(String uri, HttpRequestHandler handler, HttpMethod ... supportedMethods) {
+	public Route(String uri, HttpRequestHandler handler, HttpMethod... supportedMethods) {
 		_supportedMethods = supportedMethods;
 		_uri = uri;
 		_handler = handler;
 	}
-	
-	public HttpMethod[] getSupportedMethods(){
+
+	public HttpMethod[] getSupportedMethods() {
 		return _supportedMethods;
 	}
 
-	public String getUri(){
+	public String getUri() {
 		return _uri;
 	}
 
-	public HttpRequestHandler getHandler(){
+	public HttpRequestHandler getHandler() {
 		return _handler;
 	}
 }

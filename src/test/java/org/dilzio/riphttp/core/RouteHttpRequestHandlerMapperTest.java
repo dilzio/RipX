@@ -44,38 +44,38 @@ public class RouteHttpRequestHandlerMapperTest {
 		verify(mockMatcher).lookup(FOO, HttpMethod.GET);
 	}
 
-	@Test(expected=IllegalArgumentException.class)
+	@Test(expected = IllegalArgumentException.class)
 	public void nullMatcherOnConstruction() {
 		new RouteHttpRequestHandlerMapper(null);
 	}
-	
+
 	@Test
-	public void registerHandler(){
+	public void registerHandler() {
 		RoutePatternMatcher mockMatcher = mock(RoutePatternMatcher.class);
 		RouteHttpRequestHandlerMapper underTest = new RouteHttpRequestHandlerMapper(mockMatcher);
 		HttpRequestHandler mockHandler = mock(HttpRequestHandler.class);
-		
+
 		when(mockMatcher.lookup(FOO, HttpMethod.GET)).thenReturn(mockHandler);
 		underTest.register(new Route(FOO, mockHandler, HttpMethod.GET));
 		HttpRequest request = new BasicHttpRequest(new BasicRequestLine(GET, "/foo#asection", new ProtocolVersion(HTTP, 1, 1)));
 		HttpRequestHandler returned = underTest.lookup(request);
 		assertTrue(mockHandler.equals(returned));
 	}
-	
+
 	@Test
-	public void rpmIntegrationTest(){
+	public void rpmIntegrationTest() {
 		RoutePatternMatcher matcher = new RoutePatternMatcher();
 		RouteHttpRequestHandlerMapper underTest = new RouteHttpRequestHandlerMapper(matcher);
 		HttpRequestHandler mockHandler = mock(HttpRequestHandler.class);
 		HttpRequestHandler mockHandler2 = mock(HttpRequestHandler.class);
 		HttpRequestHandler mockHandler3 = mock(HttpRequestHandler.class);
 		HttpRequestHandler mockHandler4 = mock(HttpRequestHandler.class);
-		
+
 		underTest.register(new Route("/foo*", mockHandler, HttpMethod.GET));
 		underTest.register(new Route("/foo/bar", mockHandler2, HttpMethod.GET));
 		underTest.register(new Route("*", mockHandler3, HttpMethod.GET));
 		underTest.register(new Route("*/foo", mockHandler4, HttpMethod.GET));
-		
+
 		HttpRequest request = new BasicHttpRequest(new BasicRequestLine(GET, FOO, new ProtocolVersion(HTTP, 1, 1)));
 		HttpRequestHandler returned = underTest.lookup(request);
 		assertTrue(mockHandler.equals(returned));
@@ -83,7 +83,7 @@ public class RouteHttpRequestHandlerMapperTest {
 		request = new BasicHttpRequest(new BasicRequestLine(GET, "/foo/bar", new ProtocolVersion(HTTP, 1, 1)));
 		returned = underTest.lookup(request);
 		assertTrue(mockHandler2.equals(returned));
-		
+
 		request = new BasicHttpRequest(new BasicRequestLine(GET, "/bilz", new ProtocolVersion(HTTP, 1, 1)));
 		returned = underTest.lookup(request);
 		assertTrue(mockHandler3.equals(returned));

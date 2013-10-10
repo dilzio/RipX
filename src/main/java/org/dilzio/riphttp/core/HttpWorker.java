@@ -30,60 +30,60 @@ public class HttpWorker implements WorkHandler<HttpConnectionEvent>, LifecycleAw
 	private final String _name;
 	private final HttpService _httpService;
 	private final CyclicBarrier _startUpBarrier;
-	
-	public HttpWorker(final String serverName, final String serverVsn, final String name, final HttpRequestHandlerMapper registry, final CyclicBarrier startUpBarrier){
+
+	public HttpWorker(final String serverName, final String serverVsn, final String name, final HttpRequestHandlerMapper registry, final CyclicBarrier startUpBarrier) {
 		_name = name;
-		HttpProcessor httpProc = HttpProcessorBuilder.create().add(new ResponseDate())
-												 .add(new ResponseServer(serverName + "/" + serverVsn))
-												 .add(new ResponseContent())
-												 .add(new ResponseConnControl()).build();
+		HttpProcessor httpProc = HttpProcessorBuilder.create().add(new ResponseDate()).add(new ResponseServer(serverName + "/" + serverVsn)).add(new ResponseContent()).add(new ResponseConnControl()).build();
 		_httpService = new HttpService(httpProc, registry);
 		_startUpBarrier = startUpBarrier;
-			
+
 	}
-	
+
 	@Override
-	public void setEventReleaser(EventReleaser eventReleaser) {/*TODO*/}
+	public void setEventReleaser(EventReleaser eventReleaser) {/* TODO */
+	}
 
 	@Override
 	public void onEvent(final HttpConnectionEvent event) throws Exception {
-	LOG.info("Handler %s on Event number: %s", _name, event.getId());
+		LOG.info("Handler %s on Event number: %s", _name, event.getId());
 		HttpServerConnection httpCon = event.get_httpConn();
-		if (null == httpCon){
+		if (null == httpCon) {
 			LOG.error("Event seq: %s received with null http connection object. Throwing Exception.", event.getId());
 			throw new RuntimeException("Null http connection on event.");
 		}
-		try{
-			  LOG.info("Handler %s received event: %s", _name, event.getId());
-			  _httpService.handleRequest(httpCon, new BasicHttpContext(null));
-			  LOG.info("Handler %s sucessfully processed event: %s", _name, event.getId());
-		} catch (ConnectionClosedException ce){
+		try {
+			LOG.info("Handler %s received event: %s", _name, event.getId());
+			_httpService.handleRequest(httpCon, new BasicHttpContext(null));
+			LOG.info("Handler %s sucessfully processed event: %s", _name, event.getId());
+		} catch (ConnectionClosedException ce) {
 			LOG.warn("ConnectionClosed Exception event %s", event.getId());
-		} catch (SocketException se){
+		} catch (SocketException se) {
 			LOG.warn("Socket Exception event %s", event.getId());
-		}finally{
-			try{
+		} finally {
+			try {
 				httpCon.shutdown();
-			}catch(IOException ignore) {
+			} catch (IOException ignore) {
 				LOG.warn("threw IOException when attempting to shutdown httpcCon: %s", ignore.getMessage());
 			}
 		}
 	}
+
 	@Override
 	public void onStart() {
 		LOG.info("Worker %s awaiting...", _name);
 		try {
 			_startUpBarrier.await(5L, TimeUnit.SECONDS);
 		} catch (Exception e) {
-		    LOG.info("Worker %s threw exception while waiting on barrier.", _name);
+			LOG.info("Worker %s threw exception while waiting on barrier.", _name);
 			throw new RuntimeException(e);
 		}
 		LOG.info("Worker %s started.", _name);
 	}
+
 	@Override
 	public void onShutdown() {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 }

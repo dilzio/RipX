@@ -11,15 +11,15 @@ import org.apache.http.protocol.HttpRequestHandler;
 
 public class BasicOkResponseHttpRequestHandler implements HttpRequestHandler {
 	private final String _message;
-	
-	public BasicOkResponseHttpRequestHandler(final String message){
+
+	public BasicOkResponseHttpRequestHandler(final String message) {
 		_message = message;
-	} 
+	}
 
 	@Override
 	public void handle(final HttpRequest request, final HttpResponse response, final HttpContext context) throws HttpException, IOException {
-			//response.setStatusCode(HttpStatus.SC_OK);
-			response.setEntity(new StringEntity(_message));
+		// response.setStatusCode(HttpStatus.SC_OK);
+		response.setEntity(new StringEntity(_message));
 	}
 
 }

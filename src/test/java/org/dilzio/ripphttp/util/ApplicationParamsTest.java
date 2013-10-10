@@ -32,7 +32,7 @@ public class ApplicationParamsTest {
 		ApplicationParams params = new ApplicationParams();
 		assertNull(params.getStringParam(ParamEnum.SSL_KEYSTORE_PASSWORD));
 	}
-	
+
 	@Test
 	public void setAndGet() {
 		ApplicationParams params = new ApplicationParams();
@@ -46,8 +46,8 @@ public class ApplicationParamsTest {
 		assertEquals(3.45, params.getFloatParam(ParamEnum.TEST_FLOAT), .0001);
 		assertEquals("secret", params.getStringParam(ParamEnum.SSL_KEYSTORE_PASSWORD));
 	}
-	
-	@Test(expected=NumberFormatException.class)
+
+	@Test(expected = NumberFormatException.class)
 	public void tryInvalidNumeric() {
 		ApplicationParams params = new ApplicationParams();
 		params.setParam(ParamEnum.LISTEN_PORT, "abcd");

@@ -20,10 +20,10 @@ public class ListenerDaemon implements Runnable {
 	private final int _port;
 	private final RingBuffer<HttpConnectionEvent> _ringBuffer;
 	private final AtomicBoolean _isShutdown = new AtomicBoolean(false);
-	
+
 	private ServerSocket _listenerSocket = null;
 	private Thread _runThread = null;
-	
+
 	public ListenerDaemon(final int port, final RingBuffer<HttpConnectionEvent> ringBuffer) {
 		_port = port;
 		_ringBuffer = ringBuffer;
@@ -40,15 +40,15 @@ public class ListenerDaemon implements Runnable {
 			LOG.fatal("Unable to open listener socket on port %s. Aborting startup.", _port);
 			throw new RuntimeException(e);
 		}
-		while(!Thread.interrupted()){
+		while (!Thread.interrupted()) {
 			try {
 				Socket connectionSocket = _listenerSocket.accept();
 				HttpServerConnection httpConnection = _connFactory.createConnection(connectionSocket);
 				long sequence = _ringBuffer.next();
 				_ringBuffer.get(sequence).set_httpConn(httpConnection);
-			    _ringBuffer.publish(sequence);
+				_ringBuffer.publish(sequence);
 			} catch (IOException e) {
-				if (_isShutdown.get()){
+				if (_isShutdown.get()) {
 					return;
 				}
 				LOG.error("Unable to accept connection: %s", e);
@@ -57,11 +57,11 @@ public class ListenerDaemon implements Runnable {
 		LOG.info("Listener thread %s exiting", _runThread.getName());
 	}
 
-	public void stop(){
+	public void stop() {
 		_isShutdown.set(true);
 		_runThread.interrupt();
 		try {
-			if (null != _listenerSocket){
+			if (null != _listenerSocket) {
 				_listenerSocket.close();
 			}
 		} catch (IOException e) {

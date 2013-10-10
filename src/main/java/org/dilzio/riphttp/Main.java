@@ -12,34 +12,39 @@ import org.dilzio.riphttp.util.ParamEnum;
 
 /**
  * Main class for running RipHttp as a stand alone server
+ * 
  * @author dilzio
  */
 public final class Main {
-	private Main(){}
+	private Main() {
+	}
+
 	/**
-	 * @param args [0] should be the path to a java properties file where each property is a name value pair.
-	 * These are read into an ApplicationParams class for further processing.  See the ParamEnum class for 
-	 * the list of available options.
-	 * @throws ExecutionException 
-	 * @throws InterruptedException 
+	 * @param args
+	 *            [0] should be the path to a java properties file where each
+	 *            property is a name value pair. These are read into an
+	 *            ApplicationParams class for further processing. See the
+	 *            ParamEnum class for the list of available options.
+	 * @throws ExecutionException
+	 * @throws InterruptedException
 	 * 
 	 */
-	//TODO source properties file correctly. take doc root
+	// TODO source properties file correctly. take doc root
 	public static void main(String[] args) throws InterruptedException, ExecutionException {
 		String docroot = System.getProperty("DOCROOT");
-		
-		if (null == docroot){
+
+		if (null == docroot) {
 			System.out.println("DOCROOT System Property Must be set. Exiting");
 			System.exit(0);
 		}
 		ApplicationParams params = new ApplicationParams();
 		params.setParam(ParamEnum.WORKER_COUNT, "3");
 		final RipHttp server = new RipHttp(params);
-		
-		//add a default file handler
+
+		// add a default file handler
 		server.addHandlers(new Route("*", new HttpFileHandler(docroot), HttpMethod.GET));
-		Runtime.getRuntime().addShutdownHook(new Thread(){
-			public void run(){
+		Runtime.getRuntime().addShutdownHook(new Thread() {
+			public void run() {
 				server.stop();
 				try {
 					Thread.sleep(100);
@@ -49,8 +54,8 @@ public final class Main {
 				}
 			}
 		});
-		
-		if (args.length == 0){
+
+		if (args.length == 0) {
 			Future<?> shutdownFuture = server.start();
 			shutdownFuture.get();
 		}
