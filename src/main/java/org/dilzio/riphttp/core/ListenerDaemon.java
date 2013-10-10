@@ -18,6 +18,9 @@ public class ListenerDaemon implements Runnable {
 	private final HttpConnectionFactory<DefaultBHttpServerConnection> _connFactory = DefaultBHttpServerConnectionFactory.INSTANCE;
 	private final int _port;
 	private final RingBuffer<HttpConnectionEvent> _ringBuffer;
+	
+	private ServerSocket _listenerSocket = null;
+	private Thread _runThread = null;
 	public ListenerDaemon(final int port, final RingBuffer<HttpConnectionEvent> ringBuffer) {
 		_port = port;
 		_ringBuffer = ringBuffer;
@@ -25,38 +28,38 @@ public class ListenerDaemon implements Runnable {
 
 	@Override
 	public void run() {
+		_runThread = Thread.currentThread();
 		LOG.info("Listening for incoming connections on port %s", _port);
-		ServerSocket listenerSocket = null;
+
 		try {
-			listenerSocket = new ServerSocket(_port);
+			_listenerSocket = new ServerSocket(_port);
 		} catch (IOException e) {
 			LOG.fatal("Unable to open listener socket on port %s. Aborting startup.", _port);
 			System.exit(-1);
 		}
 		while(!Thread.interrupted()){
 			try {
-				Socket connectionSocket = listenerSocket.accept();
+				Socket connectionSocket = _listenerSocket.accept();
 				HttpServerConnection httpConnection = _connFactory.createConnection(connectionSocket);
 				long sequence = _ringBuffer.next();
 				_ringBuffer.get(sequence).set_httpConn(httpConnection);
 			    _ringBuffer.publish(sequence);
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
 				LOG.error("Unable to accept connection");
 				e.printStackTrace();
 			}
 		}
 
-		//Thread interrupt detected -- shut down
-	    try {
-			listenerSocket.close();
-		} catch (IOException e) {
-			LOG.error("Error on closing listener socket: %s", e.getMessage());
-		}
 	}
 
 	public void stop(){
-		Thread.currentThread().interrupt();
+		_runThread.interrupt();
+		try {
+			LOG.debug("Closing listener socket");
+			_listenerSocket.close();
+		} catch (IOException e) {
+			//ignore
+		}
 	}
 
 }
