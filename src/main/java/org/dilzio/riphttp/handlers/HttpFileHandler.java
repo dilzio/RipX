@@ -44,9 +44,9 @@ public class HttpFileHandler implements HttpRequestHandler {
                 byte[] entityContent = EntityUtils.toByteArray(entity);
                 System.out.println("Incoming entity content (bytes): " + entityContent.length);
             }
-
             final File file = new File(this.docRoot, URLDecoder.decode(target, "UTF-8"));
-            if (!file.exists()) {
+
+            if (!file.exists()) { // NOPMD by dilzio on 10/10/13 8:30 PM
                 response.setStatusCode(HttpStatus.SC_NOT_FOUND);
                 StringEntity entity = new StringEntity(
                         "<html><body><h1>File" + file.getPath() +

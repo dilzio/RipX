@@ -1,7 +1,6 @@
 package org.dilzio.riphttp.util;
 
 import java.lang.Thread.UncaughtExceptionHandler;
-import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 
 import org.apache.http.util.Args;
