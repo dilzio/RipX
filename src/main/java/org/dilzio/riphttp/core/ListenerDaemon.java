@@ -47,7 +47,16 @@ public class ListenerDaemon implements Runnable {
 			}
 		}
 
+		//Thread interrupt detected -- shut down
+	    try {
+			listenerSocket.close();
+		} catch (IOException e) {
+			LOG.error("Error on closing listener socket: %s", e.getMessage());
+		}
 	}
-	
+
+	public void stop(){
+		Thread.currentThread().interrupt();
+	}
 
 }

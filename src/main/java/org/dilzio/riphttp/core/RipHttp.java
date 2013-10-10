@@ -111,9 +111,11 @@ public class RipHttp {
 
 	public void stop(){
 		try {
-			_shutdownLatch.await();
   		    LOG.info("Shutting down riphttp");
+  		    _listenerThread.stop();
 		    _workerPool.drainAndHalt();
+		    _startedFlag.set(false);
+
 		} catch (Exception e) {
 			LOG.error("Unable to shut down server. Exiting.");
 			e.printStackTrace();

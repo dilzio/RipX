@@ -36,7 +36,7 @@ public final class Main {
 		server.addHandlers(new Route("*", new HttpFileHandler(docroot), HttpMethod.GET));
 		Runtime.getRuntime().addShutdownHook(new Thread(){
 			public void run(){
-				//server.stop();
+				server.stop();
 			}
 		});
 		
