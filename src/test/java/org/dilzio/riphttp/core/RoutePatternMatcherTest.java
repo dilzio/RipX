@@ -8,34 +8,36 @@ import org.dilzio.riphttp.util.HttpMethod;
 import org.junit.Test;
 public class RoutePatternMatcherTest {
 
+	private static final String FOO = "/foo";
+
 	@Test
 	public void basicHappyPath() {
 		RoutePatternMatcher  underTest = new RoutePatternMatcher();
 		HttpRequestHandler mockHandler = mock(HttpRequestHandler.class);
-		underTest.register(new Route("/foo", mockHandler, HttpMethod.GET));
-		HttpRequestHandler returned = underTest.lookup("/foo", HttpMethod.GET);
-		assertTrue(returned == mockHandler);
+		underTest.register(new Route(FOO, mockHandler, HttpMethod.GET));
+		HttpRequestHandler returned = underTest.lookup(FOO, HttpMethod.GET);
+		assertTrue(returned.equals(mockHandler));
 	}
 	
 	@Test
 	public void basicMultipleMethods() {
 		RoutePatternMatcher  underTest = new RoutePatternMatcher();
 		HttpRequestHandler mockHandler = mock(HttpRequestHandler.class);
-		underTest.register(new Route("/foo", mockHandler, HttpMethod.GET, HttpMethod.POST, HttpMethod.PUT));
-		HttpRequestHandler returned = underTest.lookup("/foo", HttpMethod.GET);
-		assertTrue(returned == mockHandler);
-		returned = underTest.lookup("/foo", HttpMethod.POST);
-		assertTrue(returned == mockHandler);
-		returned = underTest.lookup("/foo", HttpMethod.PUT);
-		assertTrue(returned == mockHandler);
+		underTest.register(new Route(FOO, mockHandler, HttpMethod.GET, HttpMethod.POST, HttpMethod.PUT));
+		HttpRequestHandler returned = underTest.lookup(FOO, HttpMethod.GET);
+		assertTrue(returned.equals(mockHandler));
+		returned = underTest.lookup(FOO, HttpMethod.POST);
+		assertTrue(returned.equals(mockHandler));
+		returned = underTest.lookup(FOO, HttpMethod.PUT);
+		assertTrue(returned.equals(mockHandler));
 	}
 	
 	@Test
 	public void failsOnCorrectRouteIncorrectMethod() {
 		RoutePatternMatcher  underTest = new RoutePatternMatcher();
 		HttpRequestHandler mockHandler = mock(HttpRequestHandler.class);
-		underTest.register(new Route("/foo", mockHandler, HttpMethod.GET, HttpMethod.POST, HttpMethod.PUT));
-		HttpRequestHandler returned = underTest.lookup("/foo", HttpMethod.HEAD);
+		underTest.register(new Route(FOO, mockHandler, HttpMethod.GET, HttpMethod.POST, HttpMethod.PUT));
+		HttpRequestHandler returned = underTest.lookup(FOO, HttpMethod.HEAD);
 		assertNull(returned);
 	}
 
@@ -43,7 +45,7 @@ public class RoutePatternMatcherTest {
 	public void failsOnIncorrectRoute() {
 		RoutePatternMatcher  underTest = new RoutePatternMatcher();
 		HttpRequestHandler mockHandler = mock(HttpRequestHandler.class);
-		underTest.register(new Route("/foo", mockHandler, HttpMethod.GET, HttpMethod.POST, HttpMethod.PUT));
+		underTest.register(new Route(FOO, mockHandler, HttpMethod.GET, HttpMethod.POST, HttpMethod.PUT));
 		HttpRequestHandler returned = underTest.lookup("/foo/bar", HttpMethod.HEAD);
 		assertNull(returned);
 	}

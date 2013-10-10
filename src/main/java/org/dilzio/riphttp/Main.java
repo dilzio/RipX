@@ -6,7 +6,9 @@ import java.util.concurrent.Future;
 import org.dilzio.riphttp.core.RipHttp;
 import org.dilzio.riphttp.core.Route;
 import org.dilzio.riphttp.handlers.HttpFileHandler;
+import org.dilzio.riphttp.util.ApplicationParams;
 import org.dilzio.riphttp.util.HttpMethod;
+import org.dilzio.riphttp.util.ParamEnum;
 
 /**
  * Main class for running RipHttp as a stand alone server
@@ -30,13 +32,21 @@ public final class Main {
 			System.out.println("DOCROOT System Property Must be set. Exiting");
 			System.exit(0);
 		}
-		final RipHttp server = new RipHttp();
+		ApplicationParams params = new ApplicationParams();
+		params.setParam(ParamEnum.WORKER_COUNT, "3");
+		final RipHttp server = new RipHttp(params);
 		
 		//add a default file handler
 		server.addHandlers(new Route("*", new HttpFileHandler(docroot), HttpMethod.GET));
 		Runtime.getRuntime().addShutdownHook(new Thread(){
 			public void run(){
 				server.stop();
+				try {
+					Thread.sleep(100);
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 			}
 		});
 		

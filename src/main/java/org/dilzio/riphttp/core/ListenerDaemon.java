@@ -3,6 +3,7 @@ package org.dilzio.riphttp.core;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.http.HttpConnectionFactory;
 import org.apache.http.HttpServerConnection;
@@ -18,9 +19,11 @@ public class ListenerDaemon implements Runnable {
 	private final HttpConnectionFactory<DefaultBHttpServerConnection> _connFactory = DefaultBHttpServerConnectionFactory.INSTANCE;
 	private final int _port;
 	private final RingBuffer<HttpConnectionEvent> _ringBuffer;
+	private final AtomicBoolean _isShutdown = new AtomicBoolean(false);
 	
 	private ServerSocket _listenerSocket = null;
 	private Thread _runThread = null;
+	
 	public ListenerDaemon(final int port, final RingBuffer<HttpConnectionEvent> ringBuffer) {
 		_port = port;
 		_ringBuffer = ringBuffer;
@@ -35,7 +38,7 @@ public class ListenerDaemon implements Runnable {
 			_listenerSocket = new ServerSocket(_port);
 		} catch (IOException e) {
 			LOG.fatal("Unable to open listener socket on port %s. Aborting startup.", _port);
-			System.exit(-1);
+			throw new RuntimeException(e);
 		}
 		while(!Thread.interrupted()){
 			try {
@@ -45,20 +48,24 @@ public class ListenerDaemon implements Runnable {
 				_ringBuffer.get(sequence).set_httpConn(httpConnection);
 			    _ringBuffer.publish(sequence);
 			} catch (IOException e) {
-				LOG.error("Unable to accept connection");
-				e.printStackTrace();
+				if (_isShutdown.get()){
+					return;
+				}
+				LOG.error("Unable to accept connection: %s", e);
 			}
 		}
-
+		LOG.info("Listener thread %s exiting", _runThread.getName());
 	}
 
 	public void stop(){
+		_isShutdown.set(true);
 		_runThread.interrupt();
 		try {
-			LOG.debug("Closing listener socket");
-			_listenerSocket.close();
+			if (null != _listenerSocket){
+				_listenerSocket.close();
+			}
 		} catch (IOException e) {
-			//ignore
+			LOG.warn("IOException thrown on listenerSocket close");
 		}
 	}
 

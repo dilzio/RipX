@@ -13,31 +13,35 @@ import static org.junit.Assert.*;
 
 public class RouteHttpRequestHandlerMapperTest {
 
+	private static final String HTTP = "HTTP";
+	private static final String FOO = "/foo";
+	private static final String GET = "GET";
+
 	@Test
 	public void basicHappyPath() {
 		RoutePatternMatcher mockMatcher = mock(RoutePatternMatcher.class);
 		RouteHttpRequestHandlerMapper underTest = new RouteHttpRequestHandlerMapper(mockMatcher);
-		HttpRequest request = new BasicHttpRequest(new BasicRequestLine("GET", "/foo", new ProtocolVersion("HTTP", 1, 1)));
+		HttpRequest request = new BasicHttpRequest(new BasicRequestLine(GET, FOO, new ProtocolVersion(HTTP, 1, 1)));
 		underTest.lookup(request);
-		verify(mockMatcher).lookup("/foo", HttpMethod.GET);
+		verify(mockMatcher).lookup(FOO, HttpMethod.GET);
 	}
 
 	@Test
 	public void ignoresQueryParams() {
 		RoutePatternMatcher mockMatcher = mock(RoutePatternMatcher.class);
 		RouteHttpRequestHandlerMapper underTest = new RouteHttpRequestHandlerMapper(mockMatcher);
-		HttpRequest request = new BasicHttpRequest(new BasicRequestLine("GET", "/foo?bar=baz", new ProtocolVersion("HTTP", 1, 1)));
+		HttpRequest request = new BasicHttpRequest(new BasicRequestLine(GET, "/foo?bar=baz", new ProtocolVersion(HTTP, 1, 1)));
 		underTest.lookup(request);
-		verify(mockMatcher).lookup("/foo", HttpMethod.GET);
+		verify(mockMatcher).lookup(FOO, HttpMethod.GET);
 	}
 
 	@Test
 	public void ignoreHash() {
 		RoutePatternMatcher mockMatcher = mock(RoutePatternMatcher.class);
 		RouteHttpRequestHandlerMapper underTest = new RouteHttpRequestHandlerMapper(mockMatcher);
-		HttpRequest request = new BasicHttpRequest(new BasicRequestLine("GET", "/foo#asection", new ProtocolVersion("HTTP", 1, 1)));
+		HttpRequest request = new BasicHttpRequest(new BasicRequestLine(GET, "/foo#asection", new ProtocolVersion(HTTP, 1, 1)));
 		underTest.lookup(request);
-		verify(mockMatcher).lookup("/foo", HttpMethod.GET);
+		verify(mockMatcher).lookup(FOO, HttpMethod.GET);
 	}
 
 	@Test(expected=IllegalArgumentException.class)
@@ -51,11 +55,11 @@ public class RouteHttpRequestHandlerMapperTest {
 		RouteHttpRequestHandlerMapper underTest = new RouteHttpRequestHandlerMapper(mockMatcher);
 		HttpRequestHandler mockHandler = mock(HttpRequestHandler.class);
 		
-		when(mockMatcher.lookup("/foo", HttpMethod.GET)).thenReturn(mockHandler);
-		underTest.register(new Route("/foo", mockHandler, HttpMethod.GET));
-		HttpRequest request = new BasicHttpRequest(new BasicRequestLine("GET", "/foo#asection", new ProtocolVersion("HTTP", 1, 1)));
+		when(mockMatcher.lookup(FOO, HttpMethod.GET)).thenReturn(mockHandler);
+		underTest.register(new Route(FOO, mockHandler, HttpMethod.GET));
+		HttpRequest request = new BasicHttpRequest(new BasicRequestLine(GET, "/foo#asection", new ProtocolVersion(HTTP, 1, 1)));
 		HttpRequestHandler returned = underTest.lookup(request);
-		assertTrue(mockHandler == returned);
+		assertTrue(mockHandler.equals(returned));
 	}
 	
 	@Test
@@ -72,20 +76,20 @@ public class RouteHttpRequestHandlerMapperTest {
 		underTest.register(new Route("*", mockHandler3, HttpMethod.GET));
 		underTest.register(new Route("*/foo", mockHandler4, HttpMethod.GET));
 		
-		HttpRequest request = new BasicHttpRequest(new BasicRequestLine("GET", "/foo", new ProtocolVersion("HTTP", 1, 1)));
+		HttpRequest request = new BasicHttpRequest(new BasicRequestLine(GET, FOO, new ProtocolVersion(HTTP, 1, 1)));
 		HttpRequestHandler returned = underTest.lookup(request);
-		assertTrue(mockHandler == returned);
+		assertTrue(mockHandler.equals(returned));
 
-		request = new BasicHttpRequest(new BasicRequestLine("GET", "/foo/bar", new ProtocolVersion("HTTP", 1, 1)));
+		request = new BasicHttpRequest(new BasicRequestLine(GET, "/foo/bar", new ProtocolVersion(HTTP, 1, 1)));
 		returned = underTest.lookup(request);
-		assertTrue(mockHandler2 == returned);
+		assertTrue(mockHandler2.equals(returned));
 		
-		request = new BasicHttpRequest(new BasicRequestLine("GET", "/bilz", new ProtocolVersion("HTTP", 1, 1)));
+		request = new BasicHttpRequest(new BasicRequestLine(GET, "/bilz", new ProtocolVersion(HTTP, 1, 1)));
 		returned = underTest.lookup(request);
-		assertTrue(mockHandler3 == returned);
+		assertTrue(mockHandler3.equals(returned));
 
-		request = new BasicHttpRequest(new BasicRequestLine("GET", "/frat/foo", new ProtocolVersion("HTTP", 1, 1)));
+		request = new BasicHttpRequest(new BasicRequestLine(GET, "/frat/foo", new ProtocolVersion(HTTP, 1, 1)));
 		returned = underTest.lookup(request);
-		assertTrue(mockHandler4 == returned);
+		assertTrue(mockHandler4.equals(returned));
 	}
 }

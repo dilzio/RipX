@@ -15,6 +15,7 @@ import org.apache.logging.log4j.Logger;
 import org.dilzio.riphttp.util.ApplicationParams;
 import org.dilzio.riphttp.util.DaemonThreadFactory;
 import org.dilzio.riphttp.util.ParamEnum;
+import org.dilzio.riphttp.util.WorkerThreadExceptionHandler;
 
 import com.lmax.disruptor.BlockingWaitStrategy;
 import com.lmax.disruptor.FatalExceptionHandler;
@@ -32,7 +33,6 @@ public class RipHttp {
 	private ExecutorService _threadPool;
 	private ListenerDaemon _listenerThread;
 	private WorkerPool<HttpConnectionEvent> _workerPool;
-	private final CyclicBarrier _shutdownLatch = new CyclicBarrier(2);
 	private CyclicBarrier _startUpBarrier;
 	private final ApplicationParams _params;
 	private final Queue<Route> _routeList = new LinkedList<Route>();
@@ -59,7 +59,7 @@ public class RipHttp {
 		
 		int numThreads = numWorkers + 1;
 		HttpWorker[] httpWorkers = new HttpWorker[numWorkers];
-		_threadPool = Executors.newFixedThreadPool(numThreads, new DaemonThreadFactory());
+		_threadPool = Executors.newFixedThreadPool(numThreads, new DaemonThreadFactory(new WorkerThreadExceptionHandler()));
 		_startUpBarrier = new CyclicBarrier(numThreads);
 
 
@@ -106,7 +106,15 @@ public class RipHttp {
 			throw new RuntimeException("Timed out waiting for Workers to start.", e);
 		}
 	
-		return _threadPool.submit(_listenerThread);
+		Future<?> ret =  _threadPool.submit(_listenerThread);
+		
+		try {
+			Thread.sleep(100);
+		} catch (InterruptedException e) {
+			throw new RuntimeException("Error while sleeping thread on startup.", e);
+		}
+		
+		return ret;
 	}
 
 	public void stop(){
@@ -114,7 +122,9 @@ public class RipHttp {
   		    LOG.info("Shutting down riphttp");
   		    _listenerThread.stop();
 		    _workerPool.drainAndHalt();
+		    _threadPool.shutdown();
 		    _startedFlag.set(false);
+		    _threadPool.awaitTermination(_params.getIntParam(ParamEnum.POOL_SHUTDOWN_AWAIT_MILLIS), TimeUnit.MILLISECONDS);
 
 		} catch (Exception e) {
 			LOG.error("Unable to shut down server. Exiting.");

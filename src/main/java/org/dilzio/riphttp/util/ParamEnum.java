@@ -10,7 +10,8 @@ public enum ParamEnum {
 	HANDLER_AWAIT_MLLIS("500"),
 	TEST_FLOAT("1.35"), 
 	SERVER_NAME("RipHTTP"), 
-	SERVER_VERSION("1.0");
+	SERVER_VERSION("1.0"),
+	POOL_SHUTDOWN_AWAIT_MILLIS("100");
 	
 	private String _default;
 	
