@@ -11,6 +11,7 @@ import org.apache.http.impl.DefaultBHttpServerConnection;
 import org.apache.http.impl.DefaultBHttpServerConnectionFactory;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.dilzio.riphttp.util.ServerSocketFactory;
 
 import com.lmax.disruptor.RingBuffer;
 
@@ -20,26 +21,28 @@ public class ListenerDaemon implements Runnable {
 	private final int _port;
 	private final RingBuffer<HttpConnectionEvent> _ringBuffer;
 	private final AtomicBoolean _isShutdown = new AtomicBoolean(false);
+	private final ServerSocketFactory _socketFactory;
 
 	private ServerSocket _listenerSocket = null;
 	private Thread _runThread = null;
 
-	public ListenerDaemon(final int port, final RingBuffer<HttpConnectionEvent> ringBuffer) {
+	public ListenerDaemon(final int port, final RingBuffer<HttpConnectionEvent> ringBuffer, final ServerSocketFactory socketFactory) {
 		_port = port;
 		_ringBuffer = ringBuffer;
+		_socketFactory = socketFactory;
 	}
 
 	@Override
 	public void run() {
 		_runThread = Thread.currentThread();
-		LOG.info("Listening for incoming connections on port %s", _port);
 
 		try {
-			_listenerSocket = new ServerSocket(_port);
+			_listenerSocket = _socketFactory.getServerSocket(_port);
 		} catch (IOException e) {
 			LOG.fatal("Unable to open listener socket on port %s. Aborting startup.", _port);
 			throw new RuntimeException(e);
 		}
+		LOG.info("Listening for incoming connections on port %s", _port);
 		while (!Thread.interrupted()) {
 			try {
 				Socket connectionSocket = _listenerSocket.accept();

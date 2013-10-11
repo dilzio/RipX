@@ -13,8 +13,10 @@ import org.apache.http.protocol.HttpRequestHandlerMapper;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.dilzio.riphttp.util.ApplicationParams;
+import org.dilzio.riphttp.util.BasicServerSocketFactory;
 import org.dilzio.riphttp.util.DaemonThreadFactory;
 import org.dilzio.riphttp.util.ParamEnum;
+import org.dilzio.riphttp.util.ServerSocketFactory;
 import org.dilzio.riphttp.util.WorkerThreadExceptionHandler;
 
 import com.lmax.disruptor.BlockingWaitStrategy;
@@ -59,7 +61,7 @@ public class RipHttp {
 		int numWorkers = _params.getIntParam(ParamEnum.WORKER_COUNT);
 		int port = _params.getIntParam(ParamEnum.LISTEN_PORT);
 		int bufferSize = _params.getIntParam(ParamEnum.RING_BUFFER_SIZE);
-
+		
 		int numThreads = numWorkers + 1;
 		HttpWorker[] httpWorkers = new HttpWorker[numWorkers];
 		_threadPool = Executors.newFixedThreadPool(numThreads, new DaemonThreadFactory(new WorkerThreadExceptionHandler()));
@@ -78,7 +80,18 @@ public class RipHttp {
 		_workerPool = new WorkerPool<HttpConnectionEvent>(ringBuffer, ringBuffer.newBarrier(), new FatalExceptionHandler(), httpWorkers);
 		ringBuffer.addGatingSequences(_workerPool.getWorkerSequences());
 
-		_listenerThread = new ListenerDaemon(port, ringBuffer);
+		
+	
+		_listenerThread = new ListenerDaemon(port, ringBuffer, getSocketFactory(_params));
+	}
+
+	private ServerSocketFactory getSocketFactory(final ApplicationParams params) {
+		if (params.getBoolParam(ParamEnum.USE_SSL)){
+			//TODO 
+			return null;
+		}else{
+			return new BasicServerSocketFactory();
+		}
 	}
 
 	private HttpRequestHandlerMapper buildMapper() {
@@ -91,8 +104,7 @@ public class RipHttp {
 	}
 
 	public Future<?> start() {
-
-		LOG.info("Starting riphttp");
+		LOG.info("Starting Riphttp with configured parameters:\n%s", _params.toString());
 		if (_routeList.isEmpty()) {
 			throw new IllegalStateException("At least one Handler must be configured.");
 		}

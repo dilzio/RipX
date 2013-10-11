@@ -37,4 +37,16 @@ public class ApplicationParams {
 	public void setParam(ParamEnum paramName, String paramVal) {
 		_paramMap.put(paramName, paramVal);
 	}
+	
+	public String toString(){
+		StringBuilder sb = new StringBuilder();
+		for (ParamEnum pe : _paramMap.keySet()){
+			sb.append(pe + "=" + _paramMap.get(pe) + "\n");
+		}
+		if (sb.length() > 0){
+			return sb.toString();
+		}
+		
+		return "none configured";
+	}
 }
