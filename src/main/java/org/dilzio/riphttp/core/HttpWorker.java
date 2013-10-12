@@ -84,7 +84,7 @@ public class HttpWorker implements WorkHandler<HttpConnectionEvent>, LifecycleAw
 
 	@Override
 	public void onShutdown() {
-		// TODO Auto-generated method stub
+		LOG.info("Shutting down Worker %s.", _name);
 
 	}
 
