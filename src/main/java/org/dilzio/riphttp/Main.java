@@ -38,12 +38,12 @@ public final class Main {
 			System.exit(0);
 		}
 		ApplicationParams params = new ApplicationParams();
-		
+
 		params.setParam(ParamEnum.WORKER_COUNT, "3");
 		params.setParam(ParamEnum.SERVER_NAME, "MattRipper");
 		params.setParam(ParamEnum.SERVER_VERSION, "1.0");
 		params.setParam(ParamEnum.RING_BUFFER_SIZE, "1048576");
-		
+
 		final RipHttp server = new RipHttp(params);
 
 		// add a default file handler

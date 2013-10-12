@@ -50,6 +50,7 @@ public class ListenerDaemon implements Runnable {
 				long sequence = _ringBuffer.next();
 				_ringBuffer.get(sequence).set_httpConn(httpConnection);
 				_ringBuffer.publish(sequence);
+				LOG.info("Listener published event %s", sequence);
 			} catch (IOException e) {
 				if (_isShutdown.get()) {
 					return;

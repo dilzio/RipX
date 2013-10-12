@@ -16,11 +16,11 @@ import org.dilzio.riphttp.util.ApplicationParams;
 import org.dilzio.riphttp.util.BasicServerSocketFactory;
 import org.dilzio.riphttp.util.DaemonThreadFactory;
 import org.dilzio.riphttp.util.ParamEnum;
+import org.dilzio.riphttp.util.PassthruExceptionHandler;
 import org.dilzio.riphttp.util.ServerSocketFactory;
 import org.dilzio.riphttp.util.WorkerThreadExceptionHandler;
 
 import com.lmax.disruptor.BlockingWaitStrategy;
-import com.lmax.disruptor.FatalExceptionHandler;
 import com.lmax.disruptor.RingBuffer;
 import com.lmax.disruptor.WorkerPool;
 
@@ -61,7 +61,7 @@ public class RipHttp {
 		int numWorkers = _params.getIntParam(ParamEnum.WORKER_COUNT);
 		int port = _params.getIntParam(ParamEnum.LISTEN_PORT);
 		int bufferSize = _params.getIntParam(ParamEnum.RING_BUFFER_SIZE);
-		
+
 		int numThreads = numWorkers + 1;
 		HttpWorker[] httpWorkers = new HttpWorker[numWorkers];
 		_threadPool = Executors.newFixedThreadPool(numThreads, new DaemonThreadFactory(new WorkerThreadExceptionHandler()));
@@ -77,19 +77,17 @@ public class RipHttp {
 		}
 
 		RingBuffer<HttpConnectionEvent> ringBuffer = RingBuffer.createSingleProducer(HttpConnectionEvent.EVENT_FACTORY, bufferSize, new BlockingWaitStrategy());
-		_workerPool = new WorkerPool<HttpConnectionEvent>(ringBuffer, ringBuffer.newBarrier(), new FatalExceptionHandler(), httpWorkers);
+		_workerPool = new WorkerPool<HttpConnectionEvent>(ringBuffer, ringBuffer.newBarrier(), new PassthruExceptionHandler(), httpWorkers);
 		ringBuffer.addGatingSequences(_workerPool.getWorkerSequences());
 
-		
-	
 		_listenerThread = new ListenerDaemon(port, ringBuffer, getSocketFactory(_params));
 	}
 
 	private ServerSocketFactory getSocketFactory(final ApplicationParams params) {
-		if (params.getBoolParam(ParamEnum.USE_SSL)){
-			//TODO 
+		if (params.getBoolParam(ParamEnum.USE_SSL)) {
+			// TODO
 			return null;
-		}else{
+		} else {
 			return new BasicServerSocketFactory();
 		}
 	}
