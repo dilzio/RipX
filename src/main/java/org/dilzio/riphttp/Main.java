@@ -43,6 +43,9 @@ public final class Main {
 		params.setParam(ParamEnum.SERVER_NAME, "MattRipper");
 		params.setParam(ParamEnum.SERVER_VERSION, "1.0");
 		params.setParam(ParamEnum.RING_BUFFER_SIZE, "1048576");
+		params.setParam(ParamEnum.USE_SSL, "true");
+		params.setParam(ParamEnum.SSL_KEYSTORE, "/Users/dilzio/Projects/rippinhttp/src/test/resources/org/dilzio/rippinhttp/testkeystore/testkeystore");
+		params.setParam(ParamEnum.SSL_KEYSTORE_PASSWORD, "password");
 
 		final RipHttp server = new RipHttp(params);
 

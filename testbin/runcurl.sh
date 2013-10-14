@@ -1,2 +1,2 @@
 #!/bin/bash
-while :; do curl localhost:8081/cool.html; done
+while :; do curl https://localhost:8081/cool.html; done

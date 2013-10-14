@@ -10,6 +10,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.http.protocol.HttpRequestHandlerMapper;
+import org.apache.http.util.Args;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.dilzio.riphttp.util.ApplicationParams;
@@ -17,6 +18,7 @@ import org.dilzio.riphttp.util.BasicServerSocketFactory;
 import org.dilzio.riphttp.util.DaemonThreadFactory;
 import org.dilzio.riphttp.util.ParamEnum;
 import org.dilzio.riphttp.util.PassthruExceptionHandler;
+import org.dilzio.riphttp.util.SSLServerSocketFactory;
 import org.dilzio.riphttp.util.ServerSocketFactory;
 import org.dilzio.riphttp.util.WorkerThreadExceptionHandler;
 
@@ -85,8 +87,11 @@ public class RipHttp {
 
 	private ServerSocketFactory getSocketFactory(final ApplicationParams params) {
 		if (params.getBoolParam(ParamEnum.USE_SSL)) {
-			// TODO
-			return null;
+			String keystore = params.getStringParam(ParamEnum.SSL_KEYSTORE);
+			String keystorePassword = params.getStringParam(ParamEnum.SSL_KEYSTORE_PASSWORD);
+			Args.notEmpty(keystore, "keystore param was empty.");
+			Args.notEmpty(keystorePassword, "keystore password param was empty.");
+			return new SSLServerSocketFactory(keystore, keystorePassword);
 		} else {
 			return new BasicServerSocketFactory();
 		}
