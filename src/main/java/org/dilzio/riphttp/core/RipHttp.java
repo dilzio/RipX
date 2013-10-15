@@ -152,6 +152,10 @@ public class RipHttp {
 	}
 
 	public void addHandlers(final Route... routes) {
+		if (_startedFlag.get()){
+			throw new IllegalStateException("Cannot add handlers while server is started.");
+		}
+
 		if (null == routes || routes.length == 0) {
 			throw new IllegalArgumentException("tried to add null or empty routes.");
 		}
