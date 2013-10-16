@@ -1,26 +1,23 @@
 package org.dilzio.ripphttp.util.stp;
 
-import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class RunnableWrapper implements Runnable {
-
-	private final ConcurrentMap<Thread, RunnableWrapper> _runnableMap;
+	private final static AtomicInteger COUNTER = new AtomicInteger();
 	private final Runnable _wrappedRunnable;
 
-	private String _name = null;
+	private final String _name;
 	
-	public RunnableWrapper(final ConcurrentMap<Thread, RunnableWrapper> threadToRunnableMap, final Runnable wrappedRunnable) {
-		_runnableMap = threadToRunnableMap;
+	public RunnableWrapper(final Runnable wrappedRunnable) {
 		_wrappedRunnable = wrappedRunnable;
+		_name = "RW=" + COUNTER.getAndIncrement();
 	}
 
 	@Override
 	public void run() {
-		Thread t = Thread.currentThread();
-		_runnableMap.put(t, this); // associate this runnable with the current thread
-		_name = t.getName();
+		RunnableWrapperThreadLocal.getInstance().set(this);
 		_wrappedRunnable.run();
-		_runnableMap.remove(t);
+		RunnableWrapperThreadLocal.getInstance().unset();
 	}
 
 	public String getName() {

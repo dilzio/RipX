@@ -4,8 +4,6 @@ import java.util.LinkedList;
 import java.util.Queue;
 import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -13,18 +11,18 @@ import org.apache.http.protocol.HttpRequestHandlerMapper;
 import org.apache.http.util.Args;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.dilzio.riphttp.disruptor.ext.WorkerPool;
 import org.dilzio.riphttp.util.ApplicationParams;
 import org.dilzio.riphttp.util.BasicServerSocketFactory;
-import org.dilzio.riphttp.util.DaemonThreadFactory;
 import org.dilzio.riphttp.util.ParamEnum;
 import org.dilzio.riphttp.util.PassthruExceptionHandler;
 import org.dilzio.riphttp.util.SSLServerSocketFactory;
 import org.dilzio.riphttp.util.ServerSocketFactory;
-import org.dilzio.riphttp.util.WorkerThreadExceptionHandler;
+import org.dilzio.ripphttp.util.stp.RestartPolicy;
+import org.dilzio.ripphttp.util.stp.SupervisoryThreadPool;
 
 import com.lmax.disruptor.BlockingWaitStrategy;
 import com.lmax.disruptor.RingBuffer;
-import com.lmax.disruptor.WorkerPool;
 
 /**
  * Fast HttpServer
@@ -66,7 +64,8 @@ public class RipHttp {
 
 		int numThreads = numWorkers + 1;
 		HttpWorker[] httpWorkers = new HttpWorker[numWorkers];
-		_threadPool = Executors.newFixedThreadPool(numThreads, new DaemonThreadFactory(new WorkerThreadExceptionHandler()));
+//		_threadPool = Executors.newFixedThreadPool(numThreads, new DaemonThreadFactory(new WorkerThreadExceptionHandler()));
+		_threadPool = new SupervisoryThreadPool(RestartPolicy.ONE_FOR_ONE, 4);
 		_startUpBarrier = new CyclicBarrier(numThreads);
 
 		for (int i = 0; i < numWorkers; i++) {
@@ -106,7 +105,7 @@ public class RipHttp {
 		return mapper;
 	}
 
-	public Future<?> start() {
+	public void start() {
 		LOG.info("Starting Riphttp with configured parameters:\n%s", _params.toString());
 		if (_routeList.isEmpty()) {
 			throw new IllegalStateException("At least one Handler must be configured.");
@@ -125,15 +124,13 @@ public class RipHttp {
 			throw new RuntimeException("Timed out waiting for Workers to start.", e);
 		}
 
-		Future<?> ret = _threadPool.submit(_listenerThread);
+		_threadPool.execute(_listenerThread);
 
 		try {
 			Thread.sleep(100);
 		} catch (InterruptedException e) {
 			throw new RuntimeException("Error while sleeping thread on startup.", e);
 		}
-
-		return ret;
 	}
 
 	public void stop() {
@@ -149,6 +146,10 @@ public class RipHttp {
 			LOG.error("Unable to shut down server. Exiting.");
 			e.printStackTrace();
 		}
+	}
+
+	public void join() throws InterruptedException {
+		_threadPool.awaitTermination(Long.MAX_VALUE, TimeUnit.MILLISECONDS);
 	}
 
 	public void addHandlers(final Route... routes) {

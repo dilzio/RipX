@@ -1,29 +1,27 @@
 package org.dilzio.ripphttp.util.stp;
 
 import java.lang.Thread.UncaughtExceptionHandler;
-import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.ExecutorService;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class ExceptionHandler implements UncaughtExceptionHandler {
+	private static final Logger LOG = LogManager.getFormatterLogger(ExceptionHandler.class.getName());
 	private final RestartPolicy _restartPolicy;
-	private final ConcurrentMap<Thread, RunnableWrapper> _internalMap;
-	private ExecutorService _internalPool;
 	
-	
-	public ExceptionHandler(final RestartPolicy restartPolicy, final ConcurrentMap<Thread, RunnableWrapper> map ) {
+	public ExceptionHandler(final RestartPolicy restartPolicy) {
 		_restartPolicy = restartPolicy;
-		_internalMap = map;
 	}
 
-	public void setExecutorService(ExecutorService es){
-		_internalPool = es;
-	}
 	@Override
 	public void uncaughtException(Thread t, Throwable e) {
 		try{
-			_restartPolicy.apply(_internalPool,  _internalMap);
+			LOG.error("Uncaught exception %s on thread %s. Handing to restart policy", e, t.getName());
+			e.printStackTrace();
+			RunnableWrapper rw = RunnableWrapperThreadLocal.getInstance().get();
+			_restartPolicy.apply2(rw);
 		}finally{
-			_internalMap.remove(Thread.currentThread());
+			RunnableWrapperThreadLocal.getInstance().unset();
 		}
 	}
 }

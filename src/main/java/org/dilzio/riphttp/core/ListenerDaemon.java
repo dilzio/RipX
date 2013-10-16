@@ -43,19 +43,33 @@ public class ListenerDaemon implements Runnable {
 			throw new RuntimeException(e);
 		}
 		LOG.info("Listening for incoming connections on port %s", _port);
-		while (!Thread.interrupted()) {
-			try {
-				Socket connectionSocket = _listenerSocket.accept();
-				HttpServerConnection httpConnection = _connFactory.createConnection(connectionSocket);
-				long sequence = _ringBuffer.next();
-				_ringBuffer.get(sequence).set_httpConn(httpConnection);
-				_ringBuffer.publish(sequence);
-				LOG.info("Listener published event %s", sequence);
-			} catch (IOException e) {
-				if (_isShutdown.get()) {
-					return;
+		try {
+			while (!Thread.interrupted()) {
+				try {
+					Socket connectionSocket = _listenerSocket.accept();
+					HttpServerConnection httpConnection = _connFactory.createConnection(connectionSocket);
+					long sequence = _ringBuffer.next();
+					// //
+					if (sequence > 0 && (sequence % 15) == 0) {
+						throw new RuntimeException("Listener RTE");
+					}
+
+					_ringBuffer.get(sequence).set_httpConn(httpConnection);
+					_ringBuffer.publish(sequence);
+					LOG.info("Listener published event %s", sequence);
+				} catch (IOException e) {
+					if (_isShutdown.get()) {
+						return;
+					}
+					LOG.error("Unable to accept connection: %s", e);
 				}
-				LOG.error("Unable to accept connection: %s", e);
+			}
+		} finally {
+			try {
+				_listenerSocket.close();
+			} catch (IOException e) {
+				LOG.info("Unable to close listener Socket");
+				throw new RuntimeException(e);
 			}
 		}
 		LOG.info("Listener thread %s exiting", _runThread.getName());

@@ -30,12 +30,14 @@ public class HttpWorker implements WorkHandler<HttpConnectionEvent>, LifecycleAw
 	private final String _name;
 	private final HttpService _httpService;
 	private final CyclicBarrier _startUpBarrier;
+	private boolean _isInitialRun;
 
 	public HttpWorker(final String serverName, final String serverVsn, final String name, final HttpRequestHandlerMapper registry, final CyclicBarrier startUpBarrier) {
 		_name = name;
 		HttpProcessor httpProc = HttpProcessorBuilder.create().add(new ResponseDate()).add(new ResponseServer(serverName + "/" + serverVsn)).add(new ResponseContent()).add(new ResponseConnControl()).build();
 		_httpService = new HttpService(httpProc, registry);
 		_startUpBarrier = startUpBarrier;
+		_isInitialRun = true;
 
 	}
 
@@ -72,14 +74,18 @@ public class HttpWorker implements WorkHandler<HttpConnectionEvent>, LifecycleAw
 
 	@Override
 	public void onStart() {
-		LOG.info("Worker %s awaiting...", _name);
-		try {
-			_startUpBarrier.await(5L, TimeUnit.SECONDS);
-		} catch (Exception e) {
-			LOG.info("Worker %s threw exception while waiting on barrier.", _name);
-			throw new RuntimeException(e);
+		if (_isInitialRun){
+			LOG.info("Worker %s awaiting...", _name);
+			try {
+				_startUpBarrier.await(5L, TimeUnit.SECONDS);
+				_isInitialRun = false;
+			} catch (Exception e) {
+				LOG.info("Worker %s threw exception while waiting on barrier.", _name);
+				throw new RuntimeException(e);
+			}
 		}
-		LOG.info("Worker %s started.", _name);
+		
+		LOG.info("Worker %s started on thread %s", _name, Thread.currentThread().getName());
 	}
 
 	@Override

@@ -12,12 +12,12 @@ public class PassthruExceptionHandler implements ExceptionHandler {
 
 	@Override
 	public void handleEventException(Throwable ex, long sequence, Object event) {
-		throw new RuntimeException(ex);
+		//DO NOT IMPLEMENT
 	}
 
 	@Override
 	public void handleOnStartException(Throwable ex) {
-		throw new RuntimeException(ex);
+		//DO NOT IMPLEMENT
 	}
 
 	@Override

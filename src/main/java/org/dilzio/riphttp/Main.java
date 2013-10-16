@@ -1,7 +1,6 @@
 package org.dilzio.riphttp;
 
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
 
 import org.dilzio.riphttp.core.RipHttp;
 import org.dilzio.riphttp.core.Route;
@@ -62,8 +61,11 @@ public final class Main {
 				}
 			}
 		});
-		Future<?> shutdownFuture = server.start();
-		shutdownFuture.get();
+		server.start();
+		try{
+			server.join();
+		}catch (InterruptedException e){
+			System.out.println("ignored");
+		}
 	}
-
 }
