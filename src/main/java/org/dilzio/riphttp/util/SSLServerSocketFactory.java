@@ -30,7 +30,7 @@ public class SSLServerSocketFactory implements ServerSocketFactory {
 			sslcontext.init(keymanagers, null, null);
 			_sslSocketFactory = sslcontext.getServerSocketFactory();
 		} catch (Exception e) {
-			throw new RuntimeException("Error creating SSL listener socket factory.");
+			throw new RuntimeException("Error creating SSL listener socket factory.", e);
 		} finally {
 			try {
 				keystoreStream.close();

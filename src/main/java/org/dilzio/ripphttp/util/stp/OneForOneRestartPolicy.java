@@ -23,17 +23,18 @@ public class OneForOneRestartPolicy implements RestartPolicy {
 		RunnableWrapper rw = _internalMap.get(Thread.currentThread());
 
 		AtomicInteger counterForRunnable = null;
-		if (!_restartCountMap.containsKey(rw)) {
+		if (_restartCountMap.containsKey(rw)) {
+			counterForRunnable = _restartCountMap.get(rw);
+		} else {
 			counterForRunnable = new AtomicInteger();
 			counterForRunnable.incrementAndGet(); // this is first pass
 			_restartCountMap.put(rw, counterForRunnable);
-		} else {
-			counterForRunnable = _restartCountMap.get(rw);
 		}
 
 		if (counterForRunnable.get() < _maxRestarts) {
 			counterForRunnable.incrementAndGet();
 			_internalPool.execute(rw);
+			LOG.warn("Respawned runnable %s on new thread", rw.getName());
 		} else {
 			LOG.error("Exceeded max restarts for runnable %s", rw.getName());
 		}

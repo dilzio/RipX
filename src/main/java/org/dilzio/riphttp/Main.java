@@ -62,11 +62,8 @@ public final class Main {
 				}
 			}
 		});
-
-		if (args.length == 0) {
-			Future<?> shutdownFuture = server.start();
-			shutdownFuture.get();
-		}
+		Future<?> shutdownFuture = server.start();
+		shutdownFuture.get();
 	}
 
 }

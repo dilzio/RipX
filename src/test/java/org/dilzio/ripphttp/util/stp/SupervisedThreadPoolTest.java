@@ -1,11 +1,5 @@
 package org.dilzio.ripphttp.util.stp;
 
-import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.ExecutorService;
-
-import org.dilzio.ripphttp.util.stp.RestartPolicy;
-import org.dilzio.ripphttp.util.stp.RunnableWrapper;
-import org.dilzio.ripphttp.util.stp.SupervisoryThreadPool;
 import org.junit.Test;
 
 public class SupervisedThreadPoolTest {
@@ -18,7 +12,7 @@ public class SupervisedThreadPoolTest {
 				try {
 					Thread.sleep(1000);
 				} catch (InterruptedException e) {
-					throw new RuntimeException("from runnable 1 catch block");
+					throw new RuntimeException("from runnable 1 catch block", e);
 				}
 				System.out.println("Throwing RTE from runnable 1");
 				throw new RuntimeException("from runnable 1");
@@ -34,7 +28,7 @@ public class SupervisedThreadPoolTest {
 			
 		};
 		
-		SupervisoryThreadPool _underTest = new SupervisoryThreadPool(new OneForOneRestartPolicy(4), r1);				
+		SupervisoryThreadPool _underTest = new SupervisoryThreadPool(new OneForOneRestartPolicy(4), r1, r2);				
 		
 		_underTest.start();
 		
