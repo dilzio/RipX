@@ -46,4 +46,19 @@ public class ApplicationParamsFactoryTest {
 		assertEquals(7998, params.getIntParam(ParamEnum.RING_BUFFER_SIZE));
 	    System.clearProperty("LISTEN_PORT");
 	}
+	
+	@Test
+	public void hydrateFromEnvironment() {
+	    System.setProperty("LISTEN_PORT", "6666");
+	    System.setProperty("USE_SSL", "true");
+	    System.setProperty("SERVER_NAME", "UnitTest");
+		ApplicationParamsFactory _underTest = ApplicationParamsFactory.getInstance();
+		ApplicationParams params = _underTest.newParamsFromEnvironment();
+		assertEquals(6666, params.getIntParam(ParamEnum.LISTEN_PORT));
+		assertEquals(true, params.getBoolParam(ParamEnum.USE_SSL));
+		assertEquals("UnitTest", params.getStringParam(ParamEnum.SERVER_NAME));
+	    System.clearProperty("LISTEN_PORT");
+	    System.clearProperty("USE_SSL");
+	    System.clearProperty("SERVER_NAME");
+	}
 }
