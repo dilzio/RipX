@@ -44,5 +44,6 @@ public class ApplicationParamsFactoryTest {
 		assertEquals(6666, params.getIntParam(ParamEnum.LISTEN_PORT));
 		assertEquals(44, params.getIntParam(ParamEnum.WORKER_COUNT));
 		assertEquals(7998, params.getIntParam(ParamEnum.RING_BUFFER_SIZE));
+	    System.clearProperty("LISTEN_PORT");
 	}
 }
