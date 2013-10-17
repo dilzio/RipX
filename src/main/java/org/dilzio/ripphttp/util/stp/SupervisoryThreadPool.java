@@ -20,13 +20,13 @@ import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 public class SupervisoryThreadPool implements ExecutorService {
 	private static final Logger LOG = LogManager.getFormatterLogger(SupervisoryThreadPool.class.getName());
-	private static final int QUEUESIZE = 100; //TODO fix hack
+	private static final int QUEUESIZE = 100; // TODO fix hack
 
 	private final ExecutorService _internalPool;
 	private final List<RunnableWrapper> _wrappedRunnables = new ArrayList<RunnableWrapper>();
 	private Thread _execThread;
 	private final BlockingQueue<RunnableWrapper> _execQ = new ArrayBlockingQueue<RunnableWrapper>(QUEUESIZE);
-	
+
 	public SupervisoryThreadPool(final RestartPolicy restartPolicy, final Runnable... runnables) {
 		ExceptionHandler handler = new ExceptionHandler(restartPolicy);
 		_internalPool = Executors.newCachedThreadPool(new DaemonThreadFactory(handler));
@@ -36,28 +36,30 @@ public class SupervisoryThreadPool implements ExecutorService {
 		LOG.info("Added %s runnables", _wrappedRunnables.size());
 	}
 
-	public SupervisoryThreadPool(String restartPolicyName, int i, final Runnable...runnables) {
-		//TODO fix this hack
+	public SupervisoryThreadPool(String restartPolicyName, int i, final Runnable... runnables) {
+		// TODO fix this hack
 		RestartPolicy restartPolicy = null;
-		if(RestartPolicy.ONE_FOR_ONE.equals(restartPolicyName)){
+		if (RestartPolicy.ONE_FOR_ONE.equals(restartPolicyName)) {
 			restartPolicy = new OneForOneRestartPolicy(_execQ, i);
-		} 
+		}
 		//
 		ExceptionHandler handler = new ExceptionHandler(restartPolicy);
 		_internalPool = Executors.newCachedThreadPool(new DaemonThreadFactory(handler));
 		for (Runnable r : runnables) {
 			_wrappedRunnables.add(wrapRunnable(r));
 		}
-		LOG.info("Added %s runnables", _wrappedRunnables.size());
+		if (!_wrappedRunnables.isEmpty()) {
+			LOG.info("Added %s runnables on construction", _wrappedRunnables.size());
+		}
 	}
 
 	private void init() throws InterruptedException {
-		_execThread = new Thread(new Runnable(){
+		_execThread = new Thread(new Runnable() {
 
 			@Override
 			public void run() {
 				LOG.info("Starting execution thread on pool thread %s", Thread.currentThread().getName());
-				while (! Thread.interrupted()) {
+				while (!Thread.interrupted()) {
 					try {
 						RunnableWrapper rw = _execQ.take();
 						_internalPool.execute(rw);
@@ -68,9 +70,9 @@ public class SupervisoryThreadPool implements ExecutorService {
 				}
 				LOG.warn("Stopping execution thread on pool thread %s", Thread.currentThread().getName());
 			}
-			
+
 		});
-	    _execThread.setName("STP Exec Thread");	
+		_execThread.setName("STP Exec Thread");
 		_execThread.start();
 	}
 
@@ -79,7 +81,7 @@ public class SupervisoryThreadPool implements ExecutorService {
 	}
 
 	public void execute(Runnable r) {
-		if (null == _execThread){
+		if (null == _execThread) {
 			try {
 				init();
 			} catch (InterruptedException e) {
@@ -90,6 +92,7 @@ public class SupervisoryThreadPool implements ExecutorService {
 	}
 
 	private void executeInternal(RunnableWrapper rw) {
+		LOG.debug("Executing wrapped runnable: %s", rw.getName());
 		_internalPool.execute(rw);
 	}
 
@@ -121,7 +124,8 @@ public class SupervisoryThreadPool implements ExecutorService {
 	public boolean awaitTermination(long timeout, TimeUnit unit) throws InterruptedException {
 		return _internalPool.awaitTermination(timeout, unit);
 	}
-	//Unimplemented ExecutorService Methods
+
+	// Unimplemented ExecutorService Methods
 	@Override
 	public <T> Future<T> submit(Callable<T> task) {
 		throw new NotImplementedException();

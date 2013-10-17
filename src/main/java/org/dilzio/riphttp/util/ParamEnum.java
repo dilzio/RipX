@@ -2,7 +2,7 @@ package org.dilzio.riphttp.util;
 
 public enum ParamEnum {
 	LISTEN_PORT("8081"), WORKER_COUNT("1"), RING_BUFFER_SIZE("8192"), USE_SSL("false"), SSL_KEYSTORE(null), SSL_KEYSTORE_PASSWORD(null), HANDLER_AWAIT_MLLIS("500"), TEST_FLOAT("1.35"), SERVER_NAME("RipHTTP"), SERVER_VERSION("1.0"), POOL_SHUTDOWN_AWAIT_MILLIS(
-			"100");
+			"100"), DOCROOT(".");
 
 	private String _default;
 

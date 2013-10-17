@@ -2,12 +2,15 @@ package org.dilzio.riphttp;
 
 import java.util.concurrent.ExecutionException;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.dilzio.riphttp.core.RipHttp;
 import org.dilzio.riphttp.core.Route;
 import org.dilzio.riphttp.handlers.HttpFileHandler;
 import org.dilzio.riphttp.util.ApplicationParams;
 import org.dilzio.riphttp.util.HttpMethod;
 import org.dilzio.riphttp.util.ParamEnum;
+import org.dilzio.ripphttp.util.ApplicationParamsFactory;
 
 /**
  * Main class for running RipHttp as a stand alone server
@@ -28,24 +31,23 @@ public final class Main {
 	 * @throws InterruptedException
 	 * 
 	 */
-	// TODO source properties file correctly. take doc root
 	public static void main(String[] args) throws InterruptedException, ExecutionException {
-		String docroot = System.getProperty("DOCROOT");
-
-		if (null == docroot) {
-			System.out.println("DOCROOT System Property Must be set. Exiting");
-			System.exit(0);
+		
+		final Logger LOG = LogManager.getFormatterLogger(Main.class.getName());
+	
+ 		LOG.info("Welcome to RipHttp");
+		ApplicationParams params = null;
+		if (null == args[0]){
+			params = ApplicationParamsFactory.getInstance().newParamsFromEnvironment();
+			LOG.info("Loaded application params from System properties");
+		}else{
+			params = ApplicationParamsFactory.getInstance().newParams(args[0], true);
+			LOG.info("Loaded application params from property file %s with system environment overlay", args[0]);
 		}
-		ApplicationParams params = new ApplicationParams();
 
-		params.setParam(ParamEnum.WORKER_COUNT, "3");
-		params.setParam(ParamEnum.SERVER_NAME, "MattRipper");
-		params.setParam(ParamEnum.SERVER_VERSION, "1.0");
-		params.setParam(ParamEnum.RING_BUFFER_SIZE, "1048576");
-		params.setParam(ParamEnum.USE_SSL, "true");
-		params.setParam(ParamEnum.SSL_KEYSTORE, "/Users/dilzio/Projects/rippinhttp/src/test/resources/org/dilzio/rippinhttp/testkeystore/testkeystore");
-		params.setParam(ParamEnum.SSL_KEYSTORE_PASSWORD, "password");
-
+		
+		String docroot = params.getStringParam(ParamEnum.DOCROOT);
+		LOG.info("Docroot set to: %s", docroot);
 		final RipHttp server = new RipHttp(params);
 
 		// add a default file handler

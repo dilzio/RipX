@@ -106,7 +106,7 @@ public class RipHttp {
 	}
 
 	public void start() {
-		LOG.info("Starting Riphttp with configured parameters:\n%s", _params.toString());
+		LOG.info("Starting Riphttp with configured parameters (all other params will be hardcoded default):\n%s", _params.toString());
 		if (_routeList.isEmpty()) {
 			throw new IllegalStateException("At least one Handler must be configured.");
 		}
