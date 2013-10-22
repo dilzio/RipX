@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.util.Properties;
 
 import org.dilzio.riphttp.util.ParamEnum;
-import org.dilzio.ripphttp.util.stp.ApplicationParams;
 
 public final class ApplicationParamsFactory {
 	private static final ApplicationParamsFactory _instance = new ApplicationParamsFactory();

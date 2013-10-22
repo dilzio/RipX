@@ -9,8 +9,8 @@ import org.dilzio.riphttp.core.Route;
 import org.dilzio.riphttp.handlers.HttpFileHandler;
 import org.dilzio.riphttp.util.HttpMethod;
 import org.dilzio.riphttp.util.ParamEnum;
+import org.dilzio.ripphttp.appparam.ApplicationParams;
 import org.dilzio.ripphttp.appparam.ApplicationParamsFactory;
-import org.dilzio.ripphttp.util.stp.ApplicationParams;
 
 /**
  * Main class for running RipHttp as a stand alone server

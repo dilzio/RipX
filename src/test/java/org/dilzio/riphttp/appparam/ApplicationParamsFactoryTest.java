@@ -3,8 +3,8 @@ package org.dilzio.riphttp.appparam;
 import static org.junit.Assert.assertEquals;
 
 import org.dilzio.riphttp.util.ParamEnum;
+import org.dilzio.ripphttp.appparam.ApplicationParams;
 import org.dilzio.ripphttp.appparam.ApplicationParamsFactory;
-import org.dilzio.ripphttp.util.stp.ApplicationParams;
 import org.junit.Test;
 
 public class ApplicationParamsFactoryTest {

@@ -17,7 +17,7 @@ import org.dilzio.riphttp.util.ParamEnum;
 import org.dilzio.riphttp.util.PassthruExceptionHandler;
 import org.dilzio.riphttp.util.SSLServerSocketFactory;
 import org.dilzio.riphttp.util.ServerSocketFactory;
-import org.dilzio.ripphttp.util.stp.ApplicationParams;
+import org.dilzio.ripphttp.appparam.ApplicationParams;
 import org.dilzio.ripphttp.util.stp.RestartPolicy;
 import org.dilzio.ripphttp.util.stp.SupervisoryThreadPool;
 

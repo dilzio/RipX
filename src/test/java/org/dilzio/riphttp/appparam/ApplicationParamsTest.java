@@ -4,7 +4,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
 import org.dilzio.riphttp.util.ParamEnum;
-import org.dilzio.ripphttp.util.stp.ApplicationParams;
+import org.dilzio.ripphttp.appparam.ApplicationParams;
 import org.junit.Test;
 
 public class ApplicationParamsTest {
