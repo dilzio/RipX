@@ -12,12 +12,12 @@ import org.apache.http.util.Args;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.dilzio.riphttp.disruptor.ext.WorkerPool;
-import org.dilzio.riphttp.util.ApplicationParams;
 import org.dilzio.riphttp.util.BasicServerSocketFactory;
 import org.dilzio.riphttp.util.ParamEnum;
 import org.dilzio.riphttp.util.PassthruExceptionHandler;
 import org.dilzio.riphttp.util.SSLServerSocketFactory;
 import org.dilzio.riphttp.util.ServerSocketFactory;
+import org.dilzio.ripphttp.util.stp.ApplicationParams;
 import org.dilzio.ripphttp.util.stp.RestartPolicy;
 import org.dilzio.ripphttp.util.stp.SupervisoryThreadPool;
 

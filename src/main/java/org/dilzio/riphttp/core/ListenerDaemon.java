@@ -50,7 +50,7 @@ public class ListenerDaemon implements Runnable {
 					HttpServerConnection httpConnection = _connFactory.createConnection(connectionSocket);
 					long sequence = _ringBuffer.next();
 					// //
-					if (sequence > 0 && (sequence % 15) == 0) {
+					if (sequence > 0 && (sequence % 8) == 0) {
 						throw new RuntimeException("Listener RTE");
 					}
 

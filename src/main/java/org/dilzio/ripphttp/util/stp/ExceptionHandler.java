@@ -19,7 +19,7 @@ public class ExceptionHandler implements UncaughtExceptionHandler {
 			LOG.error("Uncaught exception %s on thread %s. Handing to restart policy", e, t.getName());
 			e.printStackTrace();
 			RunnableWrapper rw = RunnableWrapperThreadLocal.getInstance().get();
-			_restartPolicy.apply2(rw);
+			_restartPolicy.apply(rw);
 		}finally{
 			RunnableWrapperThreadLocal.getInstance().unset();
 		}

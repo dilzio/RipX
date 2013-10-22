@@ -40,7 +40,7 @@ public class SupervisoryThreadPool implements ExecutorService {
 		// TODO fix this hack
 		RestartPolicy restartPolicy = null;
 		if (RestartPolicy.ONE_FOR_ONE.equals(restartPolicyName)) {
-			restartPolicy = new OneForOneRestartPolicy(_execQ, i);
+			restartPolicy = new OneForOneRestartPolicy(_execQ, 50000, 1L);
 		}
 		//
 		ExceptionHandler handler = new ExceptionHandler(restartPolicy);
