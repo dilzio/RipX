@@ -18,8 +18,7 @@ import org.dilzio.riphttp.util.PassthruExceptionHandler;
 import org.dilzio.riphttp.util.SSLServerSocketFactory;
 import org.dilzio.riphttp.util.ServerSocketFactory;
 import org.dilzio.ripphttp.appparam.ApplicationParams;
-import org.dilzio.ripphttp.util.stp.RestartPolicy;
-import org.dilzio.ripphttp.util.stp.SupervisoryThreadPool;
+import org.dilzio.ripphttp.util.stp.SupervisoryThreadPoolFactory;
 
 import com.lmax.disruptor.BlockingWaitStrategy;
 import com.lmax.disruptor.RingBuffer;
@@ -61,12 +60,15 @@ public class RipHttp {
 		int numWorkers = _params.getIntParam(ParamEnum.WORKER_COUNT);
 		int port = _params.getIntParam(ParamEnum.LISTEN_PORT);
 		int bufferSize = _params.getIntParam(ParamEnum.RING_BUFFER_SIZE);
-
-		int numThreads = numWorkers + 1;
+		int threadPoolSize = _params.getIntParam(ParamEnum.THREAD_POOL_SIZE);
+		
+		
 		HttpWorker[] httpWorkers = new HttpWorker[numWorkers];
-//		_threadPool = Executors.newFixedThreadPool(numThreads, new DaemonThreadFactory(new WorkerThreadExceptionHandler()));
-		_threadPool = new SupervisoryThreadPool(RestartPolicy.ONE_FOR_ONE, 4);
-		_startUpBarrier = new CyclicBarrier(numThreads);
+		_threadPool = SupervisoryThreadPoolFactory.getInstance().newOneForOneSupervisoryThreadPool(_params.getIntParam(ParamEnum.ONE_FOR_ONE_MAX_RESTARTS),
+																								   _params.getIntParam(ParamEnum.ONE_FOR_ONE_RESTART_WINDOW_MILLIS),
+																								   threadPoolSize);
+		
+		_startUpBarrier = new CyclicBarrier(numWorkers + 1); //the +1 is for the listener thread
 
 		for (int i = 0; i < numWorkers; i++) {
 			HttpRequestHandlerMapper handlerMap = buildMapper(); // each worker
@@ -118,18 +120,19 @@ public class RipHttp {
 		init();
 		_workerPool.start(_threadPool);
 
+		//wait for worker threads to all be ready
 		try {
 			_startUpBarrier.await(_params.getIntParam(ParamEnum.HANDLER_AWAIT_MLLIS), TimeUnit.MILLISECONDS);
 		} catch (Exception e) {
 			throw new RuntimeException("Timed out waiting for Workers to start.", e);
 		}
 
+		//start the listener thread and give x millis to initialize before returning control
 		_threadPool.execute(_listenerThread);
-
 		try {
-			Thread.sleep(100);
+			Thread.sleep(_params.getIntParam(ParamEnum.LISTENER_THREAD_SLEEP_ON_STARTUP_MILLIS));
 		} catch (InterruptedException e) {
-			throw new RuntimeException("Error while sleeping thread on startup.", e);
+			throw new RuntimeException("Error while sleeping listener thread on startup.", e);
 		}
 	}
 

@@ -1,8 +1,8 @@
 package org.dilzio.ripphttp.util.stp;
 
-import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.logging.log4j.LogManager;
@@ -14,15 +14,26 @@ public class OneForOneRestartPolicy implements RestartPolicy {
 	private static final Logger LOG = LogManager.getFormatterLogger(OneForOneRestartPolicy.class.getName());
 	private static ConcurrentMap<RunnableWrapper, Pair<AtomicInteger, Long>> _restartCountMap = new ConcurrentHashMap<RunnableWrapper, Pair<AtomicInteger, Long>>();
 	private final int _maxRestarts;
-	private final BlockingQueue<RunnableWrapper> _execQ;
 	private final long _restartWindowMillis;
 
-	public OneForOneRestartPolicy(final BlockingQueue<RunnableWrapper> execQ, final int maxRestarts, final long restartWindowMillis) {
-		_execQ = execQ;
+	private ExecutorService _execService;
+	OneForOneRestartPolicy(final int maxRestarts, final long restartWindowMillis) {
 		_maxRestarts = maxRestarts;
 		_restartWindowMillis = restartWindowMillis;
 	}
 
+	/**
+	 * This needs to be set before the class runs. Really it should be a constructor based injection, but since there is a 
+	 * circular dependency between SupervisoryThreadPool and OneForOneRestartPolicy (STP needs OFORP on properly set up its
+	 * internal thread pool exception handler and OFORP uses STP to execute respawned threads), it sucks less to put a setter on
+	 * this class rather than a setter for the restart policy on the STP.
+	 * @param execService
+	 */
+	public void setExecutorService(final ExecutorService execService){
+		_execService = execService;
+	}
+	
+	
 	@Override
 	public void apply(final RunnableWrapper rw) {
 		AtomicInteger counterForRunnable = null;
@@ -43,12 +54,7 @@ public class OneForOneRestartPolicy implements RestartPolicy {
 		if (lastRestartWasInWindow(System.currentTimeMillis(), lastRestartTime)) {
 			if (counterForRunnable.get() < _maxRestarts) {
 				counterForRunnable.incrementAndGet();
-				try {
-					_execQ.put(rw);
-					
-				} catch (InterruptedException e) {
-					LOG.error("Unable to respawn wrapped runnable %s", rw.getName());
-				}
+				_execService.execute(rw);
 				LOG.warn("Respawned runnable %s on new thread", rw.getName());
 			} else {
 				LOG.error("Exceeded max restarts for runnable %s", rw.getName());

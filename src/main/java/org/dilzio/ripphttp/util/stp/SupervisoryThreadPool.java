@@ -27,29 +27,11 @@ public class SupervisoryThreadPool implements ExecutorService {
 	private Thread _execThread;
 	private final BlockingQueue<RunnableWrapper> _execQ = new ArrayBlockingQueue<RunnableWrapper>(QUEUESIZE);
 
-	public SupervisoryThreadPool(final RestartPolicy restartPolicy, final Runnable... runnables) {
+	public SupervisoryThreadPool(RestartPolicy restartPolicy, int numThreads, final Runnable... runnables) {
 		ExceptionHandler handler = new ExceptionHandler(restartPolicy);
-		_internalPool = Executors.newCachedThreadPool(new DaemonThreadFactory(handler));
+		_internalPool = Executors.newFixedThreadPool(numThreads, new DaemonThreadFactory(handler));
 		for (Runnable r : runnables) {
 			_wrappedRunnables.add(wrapRunnable(r));
-		}
-		LOG.info("Added %s runnables", _wrappedRunnables.size());
-	}
-
-	public SupervisoryThreadPool(String restartPolicyName, int i, final Runnable... runnables) {
-		// TODO fix this hack
-		RestartPolicy restartPolicy = null;
-		if (RestartPolicy.ONE_FOR_ONE.equals(restartPolicyName)) {
-			restartPolicy = new OneForOneRestartPolicy(_execQ, 50000, 1L);
-		}
-		//
-		ExceptionHandler handler = new ExceptionHandler(restartPolicy);
-		_internalPool = Executors.newCachedThreadPool(new DaemonThreadFactory(handler));
-		for (Runnable r : runnables) {
-			_wrappedRunnables.add(wrapRunnable(r));
-		}
-		if (!_wrappedRunnables.isEmpty()) {
-			LOG.info("Added %s runnables on construction", _wrappedRunnables.size());
 		}
 	}
 
