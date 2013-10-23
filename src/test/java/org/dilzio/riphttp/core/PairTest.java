@@ -1,7 +1,8 @@
-package org.dilzio.riphttp.util;
+package org.dilzio.riphttp.core;
 
 import static org.junit.Assert.*;
 
+import org.dilzio.riphttp.util.Pair;
 import org.junit.Test;
 
 public class PairTest {
