@@ -6,6 +6,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.dilzio.riphttp.core.RipHttp;
 import org.dilzio.riphttp.core.Route;
+import org.dilzio.riphttp.handlers.BasicOkResponseHttpRequestHandler;
 import org.dilzio.riphttp.handlers.HttpFileHandler;
 import org.dilzio.riphttp.util.HttpMethod;
 import org.dilzio.riphttp.util.ParamEnum;
@@ -51,7 +52,8 @@ public final class Main {
 		final RipHttp server = new RipHttp(params);
 
 		// add a default file handler
-		server.addHandlers(new Route("*", new HttpFileHandler(docroot), HttpMethod.GET));
+		server.addHandlers(new Route("*", new HttpFileHandler(docroot), HttpMethod.GET),
+						   new Route("/foo", new BasicOkResponseHttpRequestHandler("OK"), HttpMethod.GET));
 		Runtime.getRuntime().addShutdownHook(new Thread() {
 			public void run() {
 				server.stop();

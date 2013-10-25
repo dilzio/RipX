@@ -22,14 +22,16 @@ public class ListenerDaemon implements Runnable {
 	private final RingBuffer<HttpConnectionEvent> _ringBuffer;
 	private final AtomicBoolean _isShutdown = new AtomicBoolean(false);
 	private final ServerSocketFactory _socketFactory;
+	private final boolean _poison;
 
 	private ServerSocket _listenerSocket = null;
 	private Thread _runThread = null;
 
-	public ListenerDaemon(final int port, final RingBuffer<HttpConnectionEvent> ringBuffer, final ServerSocketFactory socketFactory) {
+	public ListenerDaemon(final int port, final RingBuffer<HttpConnectionEvent> ringBuffer, final ServerSocketFactory socketFactory, final boolean poison) {
 		_port = port;
 		_ringBuffer = ringBuffer;
 		_socketFactory = socketFactory;
+		_poison = poison;
 	}
 
 	@Override
@@ -49,11 +51,10 @@ public class ListenerDaemon implements Runnable {
 					Socket connectionSocket = _listenerSocket.accept();
 					HttpServerConnection httpConnection = _connFactory.createConnection(connectionSocket);
 					long sequence = _ringBuffer.next();
-					// //
-					if (sequence > 0 && (sequence % 8) == 0) {
-						throw new RuntimeException("Listener RTE");
+					//TODO...something less hacky for testing
+					if (_poison && sequence > 0 && (sequence % 8) == 0)  {
+							throw new RuntimeException("Listener RTE");
 					}
-
 					_ringBuffer.get(sequence).set_httpConn(httpConnection);
 					_ringBuffer.publish(sequence);
 					LOG.info("Listener published event %s", sequence);
@@ -61,7 +62,7 @@ public class ListenerDaemon implements Runnable {
 					if (_isShutdown.get()) {
 						return;
 					}
-					LOG.error("Unable to accept connection: %s", e);
+					LOG.error("Unable to accept connection: %s", e.getMessage());
 				}
 			}
 		} finally {

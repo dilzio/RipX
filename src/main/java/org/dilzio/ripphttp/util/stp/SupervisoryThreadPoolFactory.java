@@ -4,7 +4,6 @@ import java.util.concurrent.ExecutorService;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.dilzio.riphttp.core.RipHttp;
 
 public class SupervisoryThreadPoolFactory {
 	private static final Logger LOG = LogManager.getFormatterLogger(SupervisoryThreadPoolFactory.class.getName());

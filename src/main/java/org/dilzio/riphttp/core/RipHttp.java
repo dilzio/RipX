@@ -83,7 +83,7 @@ public class RipHttp {
 		_workerPool = new WorkerPool<HttpConnectionEvent>(ringBuffer, ringBuffer.newBarrier(), new PassthruExceptionHandler(), httpWorkers);
 		ringBuffer.addGatingSequences(_workerPool.getWorkerSequences());
 
-		_listenerThread = new ListenerDaemon(port, ringBuffer, getSocketFactory(_params));
+		_listenerThread = new ListenerDaemon(port, ringBuffer, getSocketFactory(_params), _params.getBoolParam(ParamEnum.POISON_PILL));
 	}
 
 	private ServerSocketFactory getSocketFactory(final ApplicationParams params) {
@@ -122,7 +122,7 @@ public class RipHttp {
 
 		//wait for worker threads to all be ready
 		try {
-			_startUpBarrier.await(_params.getIntParam(ParamEnum.HANDLER_AWAIT_MLLIS), TimeUnit.MILLISECONDS);
+			_startUpBarrier.await(_params.getIntParam(ParamEnum.HANDLER_AWAIT_MILLIS), TimeUnit.MILLISECONDS);
 		} catch (Exception e) {
 			throw new RuntimeException("Timed out waiting for Workers to start.", e);
 		}

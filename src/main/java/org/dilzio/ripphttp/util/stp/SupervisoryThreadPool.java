@@ -15,8 +15,8 @@ import java.util.concurrent.TimeoutException;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.dilzio.riphttp.util.NotImplementedException;
 
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 public class SupervisoryThreadPool implements ExecutorService {
 	private static final Logger LOG = LogManager.getFormatterLogger(SupervisoryThreadPool.class.getName());
