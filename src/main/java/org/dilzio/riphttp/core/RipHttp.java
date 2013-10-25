@@ -13,6 +13,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.dilzio.riphttp.disruptor.ext.WorkerPool;
 import org.dilzio.riphttp.util.BasicServerSocketFactory;
+import org.dilzio.riphttp.util.BasicTimeService;
 import org.dilzio.riphttp.util.ParamEnum;
 import org.dilzio.riphttp.util.PassthruExceptionHandler;
 import org.dilzio.riphttp.util.SSLServerSocketFactory;
@@ -76,14 +77,14 @@ public class RipHttp {
 																	// own
 																	// thread-local
 																	// mapper
-			httpWorkers[i] = new HttpWorker(_params.getStringParam(ParamEnum.SERVER_NAME), _params.getStringParam(ParamEnum.SERVER_VERSION), "Worker-" + i, handlerMap, _startUpBarrier);
+			httpWorkers[i] = new HttpWorker(_params.getStringParam(ParamEnum.SERVER_NAME), _params.getStringParam(ParamEnum.SERVER_VERSION), "Worker-" + i, handlerMap, _startUpBarrier, new BasicTimeService());
 		}
 
 		RingBuffer<HttpConnectionEvent> ringBuffer = RingBuffer.createSingleProducer(HttpConnectionEvent.EVENT_FACTORY, bufferSize, new BlockingWaitStrategy());
 		_workerPool = new WorkerPool<HttpConnectionEvent>(ringBuffer, ringBuffer.newBarrier(), new PassthruExceptionHandler(), httpWorkers);
 		ringBuffer.addGatingSequences(_workerPool.getWorkerSequences());
 
-		_listenerThread = new ListenerDaemon(port, ringBuffer, getSocketFactory(_params), _params.getBoolParam(ParamEnum.POISON_PILL));
+		_listenerThread = new ListenerDaemon(port, ringBuffer, getSocketFactory(_params), _params.getBoolParam(ParamEnum.POISON_PILL), new BasicTimeService());
 	}
 
 	private ServerSocketFactory getSocketFactory(final ApplicationParams params) {

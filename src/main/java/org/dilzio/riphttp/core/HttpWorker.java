@@ -18,6 +18,7 @@ import org.apache.http.protocol.ResponseDate;
 import org.apache.http.protocol.ResponseServer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.dilzio.riphttp.util.ITimeService;
 
 import com.lmax.disruptor.EventReleaseAware;
 import com.lmax.disruptor.EventReleaser;
@@ -30,14 +31,16 @@ public class HttpWorker implements WorkHandler<HttpConnectionEvent>, LifecycleAw
 	private final String _name;
 	private final HttpService _httpService;
 	private final CyclicBarrier _startUpBarrier;
+	private ITimeService _timeService;
 	private boolean _isInitialRun;
 
-	public HttpWorker(final String serverName, final String serverVsn, final String name, final HttpRequestHandlerMapper registry, final CyclicBarrier startUpBarrier) {
+	public HttpWorker(final String serverName, final String serverVsn, final String name, final HttpRequestHandlerMapper registry, final CyclicBarrier startUpBarrier, final ITimeService timeService) {
 		_name = name;
 		HttpProcessor httpProc = HttpProcessorBuilder.create().add(new ResponseDate()).add(new ResponseServer(serverName + "/" + serverVsn)).add(new ResponseContent()).add(new ResponseConnControl()).build();
 		_httpService = new HttpService(httpProc, registry);
 		_startUpBarrier = startUpBarrier;
 		_isInitialRun = true;
+		_timeService = timeService;
 
 	}
 
@@ -47,6 +50,7 @@ public class HttpWorker implements WorkHandler<HttpConnectionEvent>, LifecycleAw
 
 	@Override
 	public void onEvent(final HttpConnectionEvent event) throws Exception {
+		event.setReadBeginTimestampMillis(_timeService.currentTimeMillis());
 		LOG.info("Handler %s on Event number: %s", _name, event.getId());
 		HttpServerConnection httpCon = event.get_httpConn();
 		if (null == httpCon) {
@@ -66,6 +70,7 @@ public class HttpWorker implements WorkHandler<HttpConnectionEvent>, LifecycleAw
 				httpCon.shutdown();
 				event.set_httpConn(null); // very important, else mem will be
 											// eaten by used events
+				event.setReadEndTimestampMillis(_timeService.currentTimeMillis());
 			} catch (IOException ignore) {
 				LOG.warn("threw IOException when attempting to shutdown httpcCon: %s", ignore.getMessage());
 			}

@@ -11,6 +11,7 @@ import org.apache.http.impl.DefaultBHttpServerConnection;
 import org.apache.http.impl.DefaultBHttpServerConnectionFactory;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.dilzio.riphttp.util.ITimeService;
 import org.dilzio.riphttp.util.ServerSocketFactory;
 
 import com.lmax.disruptor.RingBuffer;
@@ -22,16 +23,18 @@ public class ListenerDaemon implements Runnable {
 	private final RingBuffer<HttpConnectionEvent> _ringBuffer;
 	private final AtomicBoolean _isShutdown = new AtomicBoolean(false);
 	private final ServerSocketFactory _socketFactory;
+	private final ITimeService _timeService;
 	private final boolean _poison;
 
 	private ServerSocket _listenerSocket = null;
 	private Thread _runThread = null;
 
-	public ListenerDaemon(final int port, final RingBuffer<HttpConnectionEvent> ringBuffer, final ServerSocketFactory socketFactory, final boolean poison) {
+	public ListenerDaemon(final int port, final RingBuffer<HttpConnectionEvent> ringBuffer, final ServerSocketFactory socketFactory, final boolean poison, final ITimeService timeService) {
 		_port = port;
 		_ringBuffer = ringBuffer;
 		_socketFactory = socketFactory;
 		_poison = poison;
+		_timeService = timeService;
 	}
 
 	@Override
@@ -55,9 +58,11 @@ public class ListenerDaemon implements Runnable {
 					if (_poison && sequence > 0 && (sequence % 8) == 0)  {
 							throw new RuntimeException("Listener RTE");
 					}
-					_ringBuffer.get(sequence).set_httpConn(httpConnection);
+					HttpConnectionEvent event = _ringBuffer.get(sequence);
+					event.set_httpConn(httpConnection);
+					event.setWriteTimestampMillis(_timeService.currentTimeMillis());
 					_ringBuffer.publish(sequence);
-					LOG.info("Listener published event %s", sequence);
+					LOG.info("Listener published event %s", event.getId());
 				} catch (IOException e) {
 					if (_isShutdown.get()) {
 						return;
