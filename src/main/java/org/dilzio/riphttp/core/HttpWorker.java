@@ -31,7 +31,7 @@ public class HttpWorker implements WorkHandler<HttpConnectionEvent>, LifecycleAw
 	private final String _name;
 	private final HttpService _httpService;
 	private final CyclicBarrier _startUpBarrier;
-	private ITimeService _timeService;
+	private final ITimeService _timeService;
 	private boolean _isInitialRun;
 
 	public HttpWorker(final String serverName, final String serverVsn, final String name, final HttpRequestHandlerMapper registry, final CyclicBarrier startUpBarrier, final ITimeService timeService) {

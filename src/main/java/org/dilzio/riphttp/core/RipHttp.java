@@ -21,8 +21,10 @@ import org.dilzio.riphttp.util.ServerSocketFactory;
 import org.dilzio.ripphttp.appparam.ApplicationParams;
 import org.dilzio.ripphttp.util.stp.SupervisoryThreadPoolFactory;
 
+import com.lmax.disruptor.BatchEventProcessor;
 import com.lmax.disruptor.BlockingWaitStrategy;
 import com.lmax.disruptor.RingBuffer;
+import com.lmax.disruptor.SequenceBarrier;
 
 /**
  * Fast HttpServer
@@ -40,6 +42,8 @@ public class RipHttp {
 	private final ApplicationParams _params;
 	private final Queue<Route> _routeList = new LinkedList<Route>();
 	private final AtomicBoolean _startedFlag = new AtomicBoolean(false);
+	private MetricsWorker _metricsWorker;
+	private BatchEventProcessor<HttpConnectionEvent> _metricsProcessor;
 
 	/**
 	 * Will initialize with all default parameter values
@@ -82,7 +86,16 @@ public class RipHttp {
 
 		RingBuffer<HttpConnectionEvent> ringBuffer = RingBuffer.createSingleProducer(HttpConnectionEvent.EVENT_FACTORY, bufferSize, new BlockingWaitStrategy());
 		_workerPool = new WorkerPool<HttpConnectionEvent>(ringBuffer, ringBuffer.newBarrier(), new PassthruExceptionHandler(), httpWorkers);
-		ringBuffer.addGatingSequences(_workerPool.getWorkerSequences());
+		if (_params.getBoolParam(ParamEnum.CAPTURE_METRICS)){
+			LOG.info("Metrics Capture Enabled.  Metrics will be logged.");
+			_metricsWorker = new MetricsWorker();
+			SequenceBarrier httpWorkerPoolBarrier = ringBuffer.newBarrier(_workerPool.getWorkerSequences());
+			_metricsProcessor = new BatchEventProcessor<HttpConnectionEvent>(ringBuffer, httpWorkerPoolBarrier, _metricsWorker);
+			ringBuffer.addGatingSequences(_metricsProcessor.getSequence());
+		}else{
+			LOG.info("Metrics Capture disabled.  Metrics will not be logged.");
+			ringBuffer.addGatingSequences(_workerPool.getWorkerSequences());
+		}
 
 		_listenerThread = new ListenerDaemon(port, ringBuffer, getSocketFactory(_params), _params.getBoolParam(ParamEnum.POISON_PILL), new BasicTimeService());
 	}
@@ -134,6 +147,11 @@ public class RipHttp {
 			Thread.sleep(_params.getIntParam(ParamEnum.LISTENER_THREAD_SLEEP_ON_STARTUP_MILLIS));
 		} catch (InterruptedException e) {
 			throw new RuntimeException("Error while sleeping listener thread on startup.", e);
+		}
+		
+		//start up metrics worker if it was configured
+		if (null != _metricsProcessor){
+			_threadPool.execute(_metricsProcessor);
 		}
 	}
 
