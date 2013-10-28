@@ -9,5 +9,7 @@ package org.dilzio.riphttp.util;
 public interface ITimeService {
 
 	long currentTimeMillis();
+	long nanoTime();
+	long microTime();
 
 }

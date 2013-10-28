@@ -50,17 +50,17 @@ public class HttpWorker implements WorkHandler<HttpConnectionEvent>, LifecycleAw
 
 	@Override
 	public void onEvent(final HttpConnectionEvent event) throws Exception {
-		event.setReadBeginTimestampMillis(_timeService.currentTimeMillis());
-		LOG.info("Handler %s on Event number: %s", _name, event.getId());
+		event.setReadBeginTimestampMillis(_timeService.microTime());
+		LOG.trace("Handler %s on Event number: %s", _name, event.getId());
 		HttpServerConnection httpCon = event.get_httpConn();
 		if (null == httpCon) {
 			LOG.error("Event seq: %s received with null http connection object. Throwing Exception.", event.getId());
 			throw new RuntimeException("Null http connection on event.");
 		}
 		try {
-			LOG.info("Handler %s received event: %s", _name, event.getId());
+			LOG.trace("Handler %s received event: %s", _name, event.getId());
 			_httpService.handleRequest(httpCon, new BasicHttpContext(null));
-			LOG.info("Handler %s sucessfully processed event: %s", _name, event.getId());
+			LOG.trace("Handler %s sucessfully processed event: %s", _name, event.getId());
 		} catch (ConnectionClosedException ce) {
 			LOG.warn("ConnectionClosed Exception event %s", event.getId());
 		} catch (SocketException se) {
@@ -70,7 +70,7 @@ public class HttpWorker implements WorkHandler<HttpConnectionEvent>, LifecycleAw
 				httpCon.shutdown();
 				event.set_httpConn(null); // very important, else mem will be
 											// eaten by used events
-				event.setReadEndTimestampMillis(_timeService.currentTimeMillis());
+				event.setReadEndTimestampMillis(_timeService.microTime());
 			} catch (IOException ignore) {
 				LOG.warn("threw IOException when attempting to shutdown httpcCon: %s", ignore.getMessage());
 			}

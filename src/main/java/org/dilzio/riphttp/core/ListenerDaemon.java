@@ -60,9 +60,9 @@ public class ListenerDaemon implements Runnable {
 					}
 					HttpConnectionEvent event = _ringBuffer.get(sequence);
 					event.set_httpConn(httpConnection);
-					event.setWriteTimestampMillis(_timeService.currentTimeMillis());
+					event.setWriteTimestampMillis(_timeService.microTime());
 					_ringBuffer.publish(sequence);
-					LOG.info("Listener published event %s", event.getId());
+					LOG.trace("Listener published event %s", event.getId());
 				} catch (IOException e) {
 					if (_isShutdown.get()) {
 						return;

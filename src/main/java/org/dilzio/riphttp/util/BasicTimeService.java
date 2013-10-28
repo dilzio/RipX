@@ -12,4 +12,14 @@ public class BasicTimeService implements ITimeService {
 		return System.currentTimeMillis();
 	}
 
+	@Override
+	public long nanoTime() {
+		return System.nanoTime();
+	}
+
+	@Override
+	public long microTime() {
+		return nanoTime() / 1000l;
+	}
+
 }
