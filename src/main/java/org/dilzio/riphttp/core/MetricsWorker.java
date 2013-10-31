@@ -23,7 +23,8 @@ public class MetricsWorker implements EventHandler<HttpConnectionEvent> {
 		long readTime = readEndTs - readBeginTs;
 		long totalTime = readEndTs - writeTs;
 		long writeToReadTime = readBeginTs - writeTs;
-		LOG.info("EventTimingLog [sequence=%s, eventid=%s, beg_write_to_beg_read_ms=%s, tot_read_ms=%s, tot_time=%s", sequence, id, writeToReadTime, readTime, totalTime);
+		String workerName = event.getWorkerName();
+		LOG.info("EventTimingLog [sequence=%s, eventid=%s, worker=%s, beg_write_to_beg_read_ms=%s, tot_read_ms=%s, tot_time=%s", sequence, id, workerName, writeToReadTime, readTime, totalTime);
 		//Clean up event...should probably move this to a dedicated finalization worker responsible for cleaning up used events
 		event.reset();
 	}

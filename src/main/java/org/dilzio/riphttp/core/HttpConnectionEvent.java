@@ -13,6 +13,7 @@ public final class HttpConnectionEvent {
 	private long _writeTimestampMillis;
 	private long _readBeginTimestampMillis;
 	private long _readEndTimestampMillis;
+	private String _workerName;
 	
 	public static final EventFactory<HttpConnectionEvent> EVENT_FACTORY = new EventFactory<HttpConnectionEvent>() {
 		private AtomicLong _idGenerator = new AtomicLong();
@@ -33,6 +34,7 @@ public final class HttpConnectionEvent {
 		_writeTimestampMillis = 0;
 		_readBeginTimestampMillis = 0;
 		_readEndTimestampMillis = 0;
+		_workerName = null;
 	}
 	
 	public HttpServerConnection get_httpConn() {
@@ -69,5 +71,13 @@ public final class HttpConnectionEvent {
 
 	public void setReadEndTimestampMillis(long _readEndTimestampMillis) {
 		this._readEndTimestampMillis = _readEndTimestampMillis;
+	}
+
+	public String getWorkerName() {
+		return _workerName;
+	}
+
+	public void setWorkerName(String _workerName) {
+		this._workerName = _workerName;
 	}
 }

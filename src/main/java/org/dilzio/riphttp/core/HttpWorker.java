@@ -70,6 +70,7 @@ public class HttpWorker implements WorkHandler<HttpConnectionEvent>, LifecycleAw
 				httpCon.shutdown();
 				event.set_httpConn(null); // very important, else mem will be
 											// eaten by used events
+				event.setWorkerName(_name);
 				event.setReadEndTimestampMillis(_timeService.microTime());
 			} catch (IOException ignore) {
 				LOG.warn("threw IOException when attempting to shutdown httpcCon: %s", ignore.getMessage());

@@ -1,6 +1,10 @@
 package org.dilzio.riphttp.core;
 
+import java.io.IOException;
+import java.net.ServerSocket;
+import java.util.ArrayList;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.ExecutorService;
@@ -36,9 +40,9 @@ public class RipHttp {
 
 	private static final Logger LOG = LogManager.getFormatterLogger(RipHttp.class.getName());
 	private ExecutorService _threadPool;
-	private ListenerDaemon _listenerThread;
 	private WorkerPool<HttpConnectionEvent> _workerPool;
 	private CyclicBarrier _startUpBarrier;
+	private final List<ListenerDaemon> _listenerList = new ArrayList<ListenerDaemon>();
 	private final ApplicationParams _params;
 	private final Queue<Route> _routeList = new LinkedList<Route>();
 	private final AtomicBoolean _startedFlag = new AtomicBoolean(false);
@@ -83,8 +87,10 @@ public class RipHttp {
 																	// mapper
 			httpWorkers[i] = new HttpWorker(_params.getStringParam(ParamEnum.SERVER_NAME), _params.getStringParam(ParamEnum.SERVER_VERSION), "Worker-" + i, handlerMap, _startUpBarrier, new BasicTimeService());
 		}
-
-		RingBuffer<HttpConnectionEvent> ringBuffer = RingBuffer.createSingleProducer(HttpConnectionEvent.EVENT_FACTORY, bufferSize, new BlockingWaitStrategy());
+		int numConfiguredListeners = _params.getIntParam(ParamEnum.NUM_LISTENERS);
+		
+		RingBuffer<HttpConnectionEvent> ringBuffer = createRingBuffer(bufferSize, numConfiguredListeners);
+		
 		_workerPool = new WorkerPool<HttpConnectionEvent>(ringBuffer, ringBuffer.newBarrier(), new PassthruExceptionHandler(), httpWorkers);
 		if (_params.getBoolParam(ParamEnum.CAPTURE_METRICS)){
 			LOG.info("Metrics Capture Enabled.  Metrics will be logged.");
@@ -96,8 +102,32 @@ public class RipHttp {
 			LOG.info("Metrics Capture disabled.  Metrics will not be logged.");
 			ringBuffer.addGatingSequences(_workerPool.getWorkerSequences());
 		}
+		
+		createListenerDaemons(numConfiguredListeners, port, ringBuffer, _params);
+	}
 
-		_listenerThread = new ListenerDaemon(port, ringBuffer, getSocketFactory(_params), _params.getBoolParam(ParamEnum.POISON_PILL), new BasicTimeService());
+	private void createListenerDaemons(final int numConfiguredListeners, final int port, final RingBuffer<HttpConnectionEvent> ringBuffer, final ApplicationParams params){
+		ServerSocket listenerSocket;
+		try {
+			listenerSocket = getSocketFactory(params).getServerSocket(port);
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+		for (int i = 0; i < numConfiguredListeners; i++){
+			
+			_listenerList.add(new ListenerDaemon("Listener-" + i, port, ringBuffer, listenerSocket, params.getBoolParam(ParamEnum.POISON_PILL), new BasicTimeService()));
+		}
+	}
+	private RingBuffer<HttpConnectionEvent> createRingBuffer(int bufferSize, int numConfiguredListeners) {
+		RingBuffer<HttpConnectionEvent> ringBuffer;
+		if (numConfiguredListeners < 1){
+			throw new IllegalArgumentException("NUM_LISTENERS property must have min val of 1");
+		}else if (numConfiguredListeners == 1){
+			ringBuffer= RingBuffer.createSingleProducer(HttpConnectionEvent.EVENT_FACTORY, bufferSize, new BlockingWaitStrategy());
+		}else{
+			ringBuffer = RingBuffer.createMultiProducer(HttpConnectionEvent.EVENT_FACTORY, bufferSize, new BlockingWaitStrategy());
+		}
+		return ringBuffer;
 	}
 
 	private ServerSocketFactory getSocketFactory(final ApplicationParams params) {
@@ -141,8 +171,12 @@ public class RipHttp {
 			throw new RuntimeException("Timed out waiting for Workers to start.", e);
 		}
 
-		//start the listener thread and give x millis to initialize before returning control
-		_threadPool.execute(_listenerThread);
+		//start the listener threads and give x millis to initialize before returning control
+		LOG.info("Starting %s listeners.", _listenerList.size());
+		for (ListenerDaemon l: _listenerList){
+			_threadPool.execute(l);
+		}
+		
 		try {
 			Thread.sleep(_params.getIntParam(ParamEnum.LISTENER_THREAD_SLEEP_ON_STARTUP_MILLIS));
 		} catch (InterruptedException e) {
@@ -158,7 +192,9 @@ public class RipHttp {
 	public void stop() {
 		try {
 			LOG.info("Shutting down riphttp");
-			_listenerThread.stop();
+			for (ListenerDaemon l: _listenerList){
+				l.stop();
+			}
 			_workerPool.drainAndHalt();
 			_threadPool.shutdown();
 			_startedFlag.set(false);
