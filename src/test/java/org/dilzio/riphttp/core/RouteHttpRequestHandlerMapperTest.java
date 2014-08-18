@@ -1,10 +1,5 @@
 package org.dilzio.riphttp.core;
 
-import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
 import org.apache.http.HttpRequest;
 import org.apache.http.ProtocolVersion;
 import org.apache.http.message.BasicHttpRequest;
@@ -12,6 +7,9 @@ import org.apache.http.message.BasicRequestLine;
 import org.apache.http.protocol.HttpRequestHandler;
 import org.dilzio.riphttp.util.HttpMethod;
 import org.junit.Test;
+
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.*;
 
 public class RouteHttpRequestHandlerMapperTest {
 

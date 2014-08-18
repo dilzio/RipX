@@ -1,12 +1,12 @@
 package org.dilzio.riphttp.core;
 
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.mock;
-
 import org.apache.http.protocol.HttpRequestHandler;
 import org.dilzio.riphttp.util.HttpMethod;
 import org.junit.Test;
+
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
 
 public class RoutePatternMatcherTest {
 
@@ -52,7 +52,7 @@ public class RoutePatternMatcherTest {
 		assertNull(returned);
 	}
 
-	@Test
+	@Test(expected = IllegalArgumentException.class)
 	public void failsOnNullRoute() {
 		RoutePatternMatcher underTest = new RoutePatternMatcher();
 		HttpRequestHandler mockHandler = mock(HttpRequestHandler.class);
